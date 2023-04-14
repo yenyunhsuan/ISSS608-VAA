@@ -11,6 +11,7 @@ The code chunk below uses p_load() of pacman package to check if tidyverse packa
 
 ```{r}
 pacman::p_load(tidyverse)
+install.packages("ggplot")
 ```
 
 ## Importing the data
@@ -22,13 +23,19 @@ exam_data <- read_csv("data/Exam_data.csv")
 
 # Plotting a simple bar chart
 
+## Bar chart
+
 ```{r}
 ggplot(data=exam_data,
        aes(x=RACE))+
   geom_bar()
 
 ```
+
+### Horizontal bar chart
+
 Use coordinate to change bar into horizontal
+
 ```{r}
 ggplot(data=exam_data,
        aes(x=RACE))+
@@ -75,58 +82,74 @@ ggplot(data=exam_data,aes(x=MATHS))+
   scale_y_continuous(NULL,breaks = NULL) #remove y-axis value
 ```
 
-## Boxplot
+## Boxplot and Notch
 
 Notch(缺口) can check by whether notches are overlapping to see whether medians are the same
+
 ```{r}
 ggplot(data=exam_data,aes(x=GENDER,y=MATHS))+
   geom_boxplot(notch=TRUE)
 ```
+
 ## Violin Plot
+
 Can compare more clearly about the difference of distributions of multiple data
+
 ```{r}
 ggplot(data=exam_data,aes(x=GENDER,y=MATHS))+
   geom_violin()
 ```
+
 ## Scatter plot
+
 ```{r}
 ggplot(data=exam_data,aes(x=ENGLISH,y=MATHS))+
   geom_point()+
-  geom_smooth(method=lm,size=0.5)+
+  geom_smooth()+
   coord_cartesian(xlim=c(0,100),ylim=c(0,100))
 ```
-Combine scatter and boxplot
+
+### Combine scatter and boxplot
+
 ```{r}
 ggplot(data=exam_data,aes(x=GENDER,y=MATHS))+
   geom_point(position="jitter",size=0.2)+
   geom_boxplot()
 ```
-Add statistical summary
-Can use stat_summary or overwrite by a new geom_ setting
+
+### Statistical summary
+
+Add statistical summary can use stat_summary or overwrite by a new geom\_ setting
+
 ```{r}
 ggplot(data=exam_data,aes(x=GENDER,y=MATHS))+
   geom_point(position='jitter')+
   geom_boxplot()+
-  stat_summary(geom="point",fun.y='mean',color='red',size=4)
+  stat_summary(geom="point",fun='mean',color='red',size=4)
 ```
+
 ```{r}
 ggplot(data=exam_data,aes(x=GENDER,y=MATHS))+
   geom_boxplot()+
   geom_point(stat="summary",        
-             fun.y='mean',           
              colour ="red",          
              size=4)
 ```
+
 ## Create 2D panel
+
 ```{r}
 ggplot(data=exam_data,aes(x=MATHS))+
   geom_histogram(bins=20)+
   facet_wrap(~CLASS)
 ```
+
+### Facet_grid
+
 Two discrete variables can use facet_grid
+
 ```{r}
 ggplot(data=exam_data,aes(x=MATHS))+
   geom_histogram(bins=20)+
   facet_grid(~CLASS)
 ```
-
