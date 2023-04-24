@@ -4,6 +4,8 @@ title: "About"
 
 About this site
 
-```{r}
-1 + 1
-```
+Yen Yun Hsuan (Tina)
+
+LinkedIn: <https://www.linkedin.com/in/tina-yen/>
+
+email: [yhyen.2022\@mitb.smu.edu.sg](yhyen.2022@mitb.smu.edu.sg)
