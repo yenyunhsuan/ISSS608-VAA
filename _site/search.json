@@ -4,7 +4,7 @@
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "About this site\n\n1 + 1\n\n[1] 2"
+    "text": "About this site\nYen Yun Hsuan (Tina)\nLinkedIn: https://www.linkedin.com/in/tina-yen/\nemail: yhyen.2022@mitb.smu.edu.sg"
   },
   {
     "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html",
@@ -67,14 +67,7 @@
     "href": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html#create-2d-panel",
     "title": "Hands-on Exercise 1",
     "section": "Create 2D panel",
-    "text": "Create 2D panel\n\nggplot(data=exam_data,aes(x=MATHS))+\n  geom_histogram(bins=20)+\n  facet_wrap(~CLASS)\n\n\n\n\n\nTwo discrete variables can use facet_grid\n\nggplot(data=exam_data,aes(x=MATHS))+\n  geom_histogram(bins=20)+\n  facet_grid(~CLASS)"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "ISSS608-VAA",
-    "section": "",
-    "text": "Welcome to ISSS608 Visual Applications and Applications homepage. In this website, you will find my coursework prepared for this course."
+    "text": "Create 2D panel\n\nggplot(data=exam_data,aes(x=MATHS))+\n  geom_histogram(bins=20)+\n  facet_wrap(~CLASS)\n\n\n\n\n\nFacet_grid\nTwo discrete variables can use facet_grid\n\nggplot(data=exam_data,aes(x=MATHS))+\n  geom_histogram(bins=20)+\n  facet_grid(~CLASS)"
   },
   {
     "objectID": "Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02.html",
@@ -82,13 +75,6 @@
     "title": "Hands-on Exercise 2",
     "section": "",
     "text": "exam_data <- read.csv(\"data/Exam_data.csv\")\n\n\nggrepel\nAn extension of ggplot that can deal with overlapping text For example, add “_repel” to geom_label\n\nggplot(data=exam_data,aes(x=MATHS,y=ENGLISH))+\n  geom_point()+\n  geom_smooth(method=lm,linewidth=0.5)+\n  geom_label_repel(aes(label=ID),fontface='bold')+ \n  coord_cartesian(xlim=c(0,100),ylim=c(0,100))+ \n  ggtitle('English scores versus Maths scores for Primary 3\"')\n\n`geom_smooth()` using formula = 'y ~ x'\n\n\nWarning: ggrepel: 317 unlabeled data points (too many overlaps). Consider\nincreasing max.overlaps\n\n\n\n\n\n\n\nggplot theme\n\np1 <- ggplot(data=exam_data,aes(x=MATHS))+\n  geom_histogram(bins=20,\n                 boundary=100,\n                 color='grey25',\n                 fill='grey90')+\n  theme_gray()+\n  ggtitle(\"Distribution of math scores\")\np1\n\n\n\n\n\nggplot(data=exam_data,aes(x=MATHS))+\n  geom_histogram(bins=20,\n                 boundary=100,\n                 color='grey25',\n                 fill='grey90')+\n  theme_economist()+\n  ggtitle(\"Distribution of math scores\")\n\n\n\n\n\n\nWorking with hrbthems package\nMore fonts and label placements choices, adjust by axis_title size, base_size, axis_text_size\n\nggplot(data=exam_data,aes(x=MATHS))+\n  geom_histogram(bins=20,boundary=100,\n                 fill='grey25',\n                 color='grey90')+\n  ggtitle(\"Distribution of math scores\")+\n  theme_ipsum(axis_title_size = 20,base_size=20,grid='Y') \n\n\n\n\n\n\nBeyond Single Graph\n\np2 <- ggplot(data=exam_data,aes(x=ENGLISH))+\n  geom_histogram(bins=20, boundary=100,fill='grey20',color='grey90')+\n  ggtitle(\"Distribution of English score\")+\n  coord_cartesian(xlim=c(0,100))\np2\n\n\n\n\n\np3 <- ggplot(data=exam_data, \n             aes(x= MATHS, \n                 y=ENGLISH)) +\n  geom_point() +\n  geom_smooth(method=lm, \n              size=0.5) +  \n  coord_cartesian(xlim=c(0,100),\n                  ylim=c(0,100)) +\n  ggtitle(\"English scores versus Maths scores for Primary 3\")\np3\n\n`geom_smooth()` using formula = 'y ~ x'\n\n\n\n\n\n\nCombining two ggplot2 graphs\n\np1|p2\n\n\n\n\n“|” operator to stack two ggplot2 graphs,\n“/” operator to place the plots beside each other,\n“()” operator the define the sequence of the plotting\n\n\nAdd tag\n\n((p1 / p2) | p3) + \n  plot_annotation(tag_levels = 'I')\n\n`geom_smooth()` using formula = 'y ~ x'\n\n\n\n\n\n\n\nPlace plots on top of below other plots\n\np3 + inset_element(p2, \n                   left = 0.02, \n                   bottom = 0.7, \n                   right = 0.5, \n                   top = 1)\n\n`geom_smooth()` using formula = 'y ~ x'\n\n\n\n\n\n\n\nUse patchwork and ggtheme\n\npatchwork <- p3| (p1 / p2)\npatchwork & theme_economist()+theme(plot.title = element_text(size = 9))\n\n`geom_smooth()` using formula = 'y ~ x'"
-  },
-  {
-    "objectID": "Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02.html#running-code",
-    "href": "Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02.html#running-code",
-    "title": "Hands-on_Ex02",
-    "section": "Running Code",
-    "text": "Running Code\nWhen you click the Render button a document will be generated that includes both content and the output of embedded code. You can embed code like this:\n\n1 + 1\n\n[1] 2\n\n\nYou can add options to executable code like this\n\n\n[1] 4\n\n\nThe echo: false option disables the printing of code (only output is displayed)."
   },
   {
     "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html",
@@ -124,5 +110,12 @@
     "title": "In Class Exercise 1",
     "section": "Scatter plot with quadrant",
     "text": "Scatter plot with quadrant\n\nggplot(data=exam_data,aes(x=MATHS,y=ENGLISH))+\n  geom_point()+\n  coord_cartesian(xlim=c(0,100),ylim=c(0,100))+\n  geom_hline(aes(yintercept=50),color='grey',size=1,linetype='dashed')+\n  geom_vline(aes(xintercept=50),color='grey',size=1,linetype='dashed')"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "ISSS608-VAA",
+    "section": "",
+    "text": "Welcome to ISSS608 Visual Applications and Applications homepage. In this website, you will find my coursework prepared for this course."
   }
 ]

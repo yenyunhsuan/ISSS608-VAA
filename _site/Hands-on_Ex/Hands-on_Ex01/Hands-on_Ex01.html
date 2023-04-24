@@ -152,6 +152,21 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html">
  <span class="dropdown-text">Hands-on Exercise 1</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02.html">
+ <span class="dropdown-text">Hands-on Exercise 2</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-in-class-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">In class Exercise</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercise">    
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex01/In-class_Ex01.html">
+ <span class="dropdown-text">In class Exercise 1</span></a>
+  </li>  
     </ul>
   </li>
 </ul>
@@ -202,7 +217,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   </ul></li>
   <li><a href="#create-2d-panel" id="toc-create-2d-panel" class="nav-link" data-scroll-target="#create-2d-panel">Create 2D panel</a>
   <ul class="collapse">
-  <li><a href="#two-discrete-variables-can-use-facet_grid" id="toc-two-discrete-variables-can-use-facet_grid" class="nav-link" data-scroll-target="#two-discrete-variables-can-use-facet_grid">Two discrete variables can use facet_grid</a></li>
+  <li><a href="#facet_grid" id="toc-facet_grid" class="nav-link" data-scroll-target="#facet_grid">Facet_grid</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -421,8 +436,9 @@ dbl (3): ENGLISH, MATHS, SCIENCE
 <p><img src="Hands-on_Ex01_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<section id="two-discrete-variables-can-use-facet_grid" class="level3">
-<h3 class="anchored" data-anchor-id="two-discrete-variables-can-use-facet_grid">Two discrete variables can use facet_grid</h3>
+<section id="facet_grid" class="level3">
+<h3 class="anchored" data-anchor-id="facet_grid">Facet_grid</h3>
+<p>Two discrete variables can use facet_grid</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>exam_data,<span class="fu">aes</span>(<span class="at">x=</span>MATHS))<span class="sc">+</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins=</span><span class="dv">20</span>)<span class="sc">+</span></span>
