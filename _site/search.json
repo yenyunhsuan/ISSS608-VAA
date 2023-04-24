@@ -89,5 +89,40 @@
     "title": "Hands-on_Ex02",
     "section": "Running Code",
     "text": "Running Code\nWhen you click the Render button a document will be generated that includes both content and the output of embedded code. You can embed code like this:\n\n1 + 1\n\n[1] 2\n\n\nYou can add options to executable code like this\n\n\n[1] 4\n\n\nThe echo: false option disables the printing of code (only output is displayed)."
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html",
+    "title": "In Class Exercise 1",
+    "section": "",
+    "text": "pacman::p_load(tidyverse)"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#import-data",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#import-data",
+    "title": "In Class Exercise 1",
+    "section": "Import data",
+    "text": "Import data\n\nexam_data <- read.csv(\"data/Exam_data.csv\")"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#horizontal-bar-chart",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#horizontal-bar-chart",
+    "title": "In Class Exercise 1",
+    "section": "Horizontal bar chart",
+    "text": "Horizontal bar chart\n\nggplot(data=exam_data,\n       aes(x=RACE))+\n  geom_bar()+\n  coord_flip()+\n  theme_minimal()+\n  theme(\n    panel.background = element_rect(fill='lightblue',color = 'lightblue'),\n    panel.grid.major = element_line(colour = 'white',size = 0.5,linewidth =  'solid'),\n    panel.grid.minor = element_line(colour = 'white',size=0.25,linewidth = 'solid')\n  )\n\nWarning: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.\nℹ Please use the `linewidth` argument instead.\n\n\n\n\n\n\nBar chart with label\n\nBar chart with label 1. function(x) counts the occurrence frequency of different x and minor constant length(x), allowing x axis to sort by the count value by descending order.\nstate=“count” indicate will use count method and applies to ..count.. and the plot\naes() to map with variables in the plot. paste0 is to concatenate strings\n“after_stat(count)” or “..count..”(new version) means count of observations in each category\nvjust is the lable position, -1 means a little above from the bar.\nuse theme(axis.title.y to adjust y axis title angle)\n\n\nggplot(data=exam_data,aes(x=reorder(RACE,RACE,function(x)-length(x))))+\n  geom_bar()+\n  ylim(0,220)+\n  xlab(\"RACE\")+\n  ylab(\"No. of \\nPupils\")+\n  geom_text(stat =\"count\",aes(label=paste0(after_stat(count),\",\",                                       round(after_stat(count)/sum(after_stat(count))*100,1),\"%\")),\n            vjust=-1)+\n  theme(axis.title.y=element_text(angle=0))\n\n\n\n\n\n\nUse fct_infreq() of forcats package\n\nUse Command + Shift + M to type %>%\nfct_infreq can count the occurrence frequency of each category, and reorder by descending order\nMutate create a new column, and use %>% to modify and apply new changes to the data frame.\n\n\nexam_data %>% \n  mutate(RACE=fct_infreq(RACE)) %>% \n  ggplot(aes(RACE))+\n  geom_bar()+\n  ylim(0,220)+\n  xlab(\"RACE\")+\n  ylab(\"No. of \\nPupils\")+\n  geom_text(stat =\"count\",aes(label=paste0(after_stat(count),\",\",                                       round(after_stat(count)/sum(after_stat(count))*100,1),\"%\")),\n            vjust=-1)+\n  theme(axis.title.y=element_text(angle=0))"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#histogram",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#histogram",
+    "title": "In Class Exercise 1",
+    "section": "Histogram",
+    "text": "Histogram\n\nAdd mean and median line\n\nUse vline to draw vertical line.\nxintercept as x-axis variable of MATHS\nna.rm=T(True), means apply method of removing missing values before caculating mean.\n\n\nggplot(data=exam_data,aes(MATHS))+\n  geom_histogram(bins=20,boundary=100,fill='lightblue',color='black')+\n  geom_vline(aes(xintercept=mean(MATHS,na.rm=T)),color='red',\n             linetype='dashed',size=1)+\n  geom_vline(aes(xintercept=median(MATHS,na.rm=TRUE)),color='grey',linetype='dashed',\n             size=1)\n\nWarning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.\nℹ Please use `linewidth` instead.\n\n\n\n\n\n\n\nColor comparison and facet grid\n\nguides(fill=FALSE) means to turn off legend\ncreate new histogram, one use sub_data without gender column, one use data and with black line and fill different color by gender.\n\n\ndata <- exam_data\nsub_data <- data[,-3]\n\nggplot(data,aes(x=ENGLISH,fill=GENDER))+\n  geom_histogram(data=sub_data,fill='grey',alpha=0.5)+\n  geom_histogram(colour='black')+\n  facet_wrap(~GENDER)+\n  guides(fill=FALSE)+\n  theme_bw()\n\nWarning: The `<scale>` argument of `guides()` cannot be `FALSE`. Use \"none\" instead as\nof ggplot2 3.3.4.\n\n\n`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.\n`stat_bin()` using `bins = 30`. Pick better value with `binwidth`."
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#scatter-plot-with-quadrant",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#scatter-plot-with-quadrant",
+    "title": "In Class Exercise 1",
+    "section": "Scatter plot with quadrant",
+    "text": "Scatter plot with quadrant\n\nggplot(data=exam_data,aes(x=MATHS,y=ENGLISH))+\n  geom_point()+\n  coord_cartesian(xlim=c(0,100),ylim=c(0,100))+\n  geom_hline(aes(yintercept=50),color='grey',size=1,linetype='dashed')+\n  geom_vline(aes(xintercept=50),color='grey',size=1,linetype='dashed')"
   }
 ]
