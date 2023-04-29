@@ -166,5 +166,12 @@
     "title": "Visual Analytics and Applications",
     "section": "",
     "text": "Welcome to Visual Analytics and Applications homepage. In this website, you will find my coursework and portfolio prepared for this course."
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex04/Hands-on_Ex04.html",
+    "href": "Hands-on_Ex/Hands-on_Ex04/Hands-on_Ex04.html",
+    "title": "Hands-on_Ex04",
+    "section": "",
+    "text": "pacman::p_load(ggstatsplot,tidyverse)\n\n\nexam_data <- read.csv(\"data/Exam_data.csv\")\n\n\n\n\n\nset.seed(1234)\ngghistostats(data=exam_data,x=ENGLISH, type=\"bayes\",\n             test.values=70,xlab=\"English score\")"
   }
 ]
