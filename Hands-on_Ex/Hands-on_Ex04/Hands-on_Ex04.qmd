@@ -20,3 +20,4 @@ gghistostats(data=exam_data,x=ENGLISH, type="bayes",
              test.values=70,xlab="English score")
 ```
 
+

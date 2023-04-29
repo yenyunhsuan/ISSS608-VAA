@@ -173,5 +173,12 @@
     "title": "Hands-on_Ex04",
     "section": "",
     "text": "pacman::p_load(ggstatsplot,tidyverse)\n\n\nexam_data <- read.csv(\"data/Exam_data.csv\")\n\n\n\n\n\nset.seed(1234)\ngghistostats(data=exam_data,x=ENGLISH, type=\"bayes\",\n             test.values=70,xlab=\"English score\")"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex03/In-class_Ex03.html",
+    "href": "In-class_Ex/In-class_Ex03/In-class_Ex03.html",
+    "title": "In-class_Ex03",
+    "section": "",
+    "text": "Tableau Public: https://public.tableau.com/app/profile/yun.hsuan.yen"
   }
 ]
