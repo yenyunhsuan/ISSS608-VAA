@@ -1,4 +1,3 @@
-
 ---
 title: "Visual Analytics and Applications"
 ---
