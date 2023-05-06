@@ -16,7 +16,7 @@ rstatix: transform the statistic test result into data table instead of just tex
 #| code-fold: true
 #| code-summary: "Show code"
 #| warning: false
-#| message: false
+#| input: false
 pacman::p_load(rstatix,gt,patchwork,tidyverse)
 ```
 
@@ -58,4 +58,28 @@ ggplot(exam_data,
 ```
 :::
 
+
+```{r}
+install.packages("vctrs", force = TRUE)
+install.packages("gt", force = TRUE)
+```
+
+```{r}
+qq <- ggplot(exam_data,
+       aes(sample=ENGLISH))+
+  stat_qq()+
+  stat_qq_line()
+
+sw_t <- exam_data %>%
+  shapiro.test(ENGLISH) %>%
+  gt()
+#make into gt format with a tidy table
+
+#create and save to temporary folder
+tmp <- tempfile(fileext = '.png')
+gtsave(sw_t,tmp)
+table_png <- png::readPNG(tmp,native=TRUE)
+
+qq+table_png
+```
 
