@@ -180,5 +180,33 @@
     "title": "In-class_Ex03",
     "section": "",
     "text": "Tableau Public: https://public.tableau.com/app/profile/yun.hsuan.yen"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex04/In-class_Ex04.html",
+    "href": "In-class_Ex/In-class_Ex04/In-class_Ex04.html",
+    "title": "In-class_Ex04",
+    "section": "",
+    "text": "rstatix: transform the statistic test result into data table instead of just text\n\n\nShow code\npacman::p_load(rstatix,gt,patchwork,tidyverse)\n\n\npackage 'rstatix' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpsNKYdP\\downloaded_packages\npackage 'gt' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpsNKYdP\\downloaded_packages\npackage 'tidyverse' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpsNKYdP\\downloaded_packages\n\n\n\nlibrary(magrittr) # needs to be run every time you start R and want to use %>%\nlibrary(vctrs)\n\n\nlibrary(readr)\nexam_data <- read_csv(\"data/Exam_data.csv\")"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#plot-qq-plot",
+    "href": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#plot-qq-plot",
+    "title": "In-class_Ex04",
+    "section": "Plot QQ plot",
+    "text": "Plot QQ plot\nQQ plot examine the sample data, so write sample=ENGLISH in the ggplot aes. Create stat_qq with normality distribution, and one line from the sample.\n\nPlotCode\n\n\n\n\n\n\n\n\n\n\n#|eval: false\n\nggplot(exam_data,\n       aes(sample=ENGLISH))+\n  stat_qq()+\n  stat_qq_line()"
+  },
+  {
+    "objectID": "Take-home_Ex/Take-home_Ex01/Take-home_Ex01.html",
+    "href": "Take-home_Ex/Take-home_Ex01/Take-home_Ex01.html",
+    "title": "Take-home_Ex01",
+    "section": "",
+    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
+  },
+  {
+    "objectID": "Take-home_Ex/Take-home_Ex01/Take-home_Ex01.html#running-code",
+    "href": "Take-home_Ex/Take-home_Ex01/Take-home_Ex01.html#running-code",
+    "title": "Take-home_Ex01",
+    "section": "Running Code",
+    "text": "Running Code\nWhen you click the Render button a document will be generated that includes both content and the output of embedded code. You can embed code like this:\n\n1 + 1\n\n[1] 2\n\n\nYou can add options to executable code like this\n\n\n[1] 4\n\n\nThe echo: false option disables the printing of code (only output is displayed)."
   }
 ]
