@@ -186,14 +186,14 @@
     "href": "In-class_Ex/In-class_Ex04/In-class_Ex04.html",
     "title": "In-class_Ex04",
     "section": "",
-    "text": "rstatix: transform the statistic test result into data table instead of just text\n\n\nShow code\npacman::p_load(rstatix,gt,patchwork,tidyverse)\n\n\npackage 'rstatix' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpsNKYdP\\downloaded_packages\npackage 'gt' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpsNKYdP\\downloaded_packages\npackage 'tidyverse' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpsNKYdP\\downloaded_packages\n\n\n\nlibrary(magrittr) # needs to be run every time you start R and want to use %>%\nlibrary(vctrs)\n\n\nlibrary(readr)\nexam_data <- read_csv(\"data/Exam_data.csv\")"
+    "text": "rstatix: transform the statistic test result into data table instead of just text\n\n\nShow code\npacman::p_load(rstatix,gt,patchwork,tidyverse)\n\n\npackage 'rstatix' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpwRHWb7\\downloaded_packages\npackage 'gt' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpwRHWb7\\downloaded_packages\npackage 'tidyverse' successfully unpacked and MD5 sums checked\n\nThe downloaded binary packages are in\n    C:\\Users\\Tina\\AppData\\Local\\Temp\\RtmpwRHWb7\\downloaded_packages\n\n\n\nlibrary(magrittr) # needs to be run every time you start R and want to use %>%\nlibrary(vctrs)\n\n\nlibrary(readr)\nexam_data <- read_csv(\"data/Exam_data.csv\")"
   },
   {
     "objectID": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#plot-qq-plot",
     "href": "In-class_Ex/In-class_Ex04/In-class_Ex04.html#plot-qq-plot",
     "title": "In-class_Ex04",
     "section": "Plot QQ plot",
-    "text": "Plot QQ plot\nQQ plot examine the sample data, so write sample=ENGLISH in the ggplot aes. Create stat_qq with normality distribution, and one line from the sample.\n\nPlotCode\n\n\n\n\n\n\n\n\n\n\n#|eval: false\n\nggplot(exam_data,\n       aes(sample=ENGLISH))+\n  stat_qq()+\n  stat_qq_line()"
+    "text": "Plot QQ plot\nQQ plot examine the sample data, so write sample=ENGLISH in the ggplot aes. Create stat_qq with normality distribution, and one line from the sample.\n\nPlotCode\n\n\n\n\n\n\n\n\n\n\nggplot(exam_data,\n       aes(sample=ENGLISH))+\n  stat_qq()+\n  stat_qq_line()"
   },
   {
     "objectID": "Take-home_Ex/Take-home_Ex01/Take-home_Ex01.html",

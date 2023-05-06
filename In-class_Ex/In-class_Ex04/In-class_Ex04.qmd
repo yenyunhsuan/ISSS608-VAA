@@ -16,6 +16,7 @@ rstatix: transform the statistic test result into data table instead of just tex
 #| code-fold: true
 #| code-summary: "Show code"
 #| warning: false
+#| message: false
 pacman::p_load(rstatix,gt,patchwork,tidyverse)
 ```
 
@@ -48,7 +49,7 @@ ggplot(exam_data,
 ## Code
 
 ```{r}
-#|eval: false
+#| eval: false
 
 ggplot(exam_data,
        aes(sample=ENGLISH))+
