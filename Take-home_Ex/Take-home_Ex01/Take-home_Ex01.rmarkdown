@@ -1,0 +1,216 @@
+---
+title: "Take Home Exercise 1"
+format: html
+editor: visual
+author: Yen Yun Hsuan
+date: "13 May 2023"
+execute: 
+  warning: false
+---
+
+
+# Task
+
+The local council of a city is in the process of preparing the Local Plan 2023. A sample survey of 1000 representative residents had been conducted to collect data related to their household demographic and spending patterns. The city aims to use the data to assist with their **major community revitalization efforts**, including how to allocate renewal grant.
+
+This take-home exercise are required to reveal the **demographic and financial characteristics** of the city by using statistical graphics methods.
+
+# Data Preparation
+
+## Import package and data
+
+
+```{r}
+pacman::p_load(patchwork, tidyverse, ggstatsplot, 
+               ggdist, gganimate, png, gifski, nortest,dplyr,tidyr,lubridate,skimr,ggcorrplot)
+```
+
+```{r}
+participant <- read_csv("data/Participants.csv")
+financial <- read_csv("data/FinancialJournal.csv")
+```
+
+
+## Change data format
+
+Change dbl format (householdSize, age) to **int (integer)** since these values should not be float.
+
+
+```{r}
+participant <- participant %>% 
+mutate_at(vars(householdSize,age), list(~as.integer(.))) %>% 
+  mutate(participantId=as.character(participantId))
+```
+
+
+Reorder education level from lowest to highest degree.
+
+
+```{r}
+participant <- participant %>%
+  mutate(educationLevel=factor(educationLevel,levels = c("Low", "HighSchoolOrCollege", "Bachelors", "Graduate")))
+data.frame(levels(participant$educationLevel))
+```
+
+
+Each column format has been adjusted as below table shown.
+
+
+```{r}
+head(participant)
+```
+
+
+## Create Year-Month column
+
+Use lubridate package (ymd_hms) to transform timestamp column into datetime format column "time". Create a new column "**Year_Month**" with year-month value since time information is no need for following visual analysis.
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+financial$time <- as.Date(ymd_hms(financial$timestamp))
+financial <- financial %>% 
+  mutate(Year_Month=format(financial$time,"%Y-%m"),
+         participantId=as.character(participantId))
+head(financial)
+
+```
+
+
+## Group transaction by category
+
+There are some duplicate records with same participant ID, category and timestamp. Use distinct function to **drop duplicate rows.** The original amount column contains positive(meaning income) and negative (expense) values. Transform amount to **absolute value** to avoid confusion.
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+financial_new <- 
+  financial %>% 
+  distinct(participantId, category, timestamp,.keep_all = TRUE) %>%
+  group_by(participantId, category, Year_Month) %>%
+  summarise(amount = round(sum(abs(amount)),1), .groups = 'drop') 
+```
+
+
+To compare amount of different categories, need to split out the unique values in the "category" column and their corresponding amounts into new columns by [pivot_wider](https://tidyr.tidyverse.org/reference/pivot_wider.html) function. Fill null values with 0.
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+financial_orginize <- financial_new %>% 
+  pivot_wider(names_from = category, values_from = amount, values_fill = 0) %>% 
+  mutate(Expense=rowSums(select(.,Education,Food,Recreation,Shelter)))
+
+DT::datatable(financial_orginize)
+```
+
+
+## Merge two datasets
+
+Join participant and financial_organize datasets by the same participant ID.
+
+
+```{r}
+df <-  merge(x=financial_orginize,y=participant,by="participantId")
+```
+
+
+## Data Summary
+
+Show summary for numeric columns by Skimr.
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+skim(df) %>%
+  dplyr::filter(skim_type == "numeric",
+                skim_variable %in% c("Education","Food","Recreation","Shelter","Expense","RentAdjustment","Wage","joviality","age"))
+```
+
+
+# Visualization
+
+## Correlation with joviality
+
+### What is key factor to joviality(overall happiness level)?
+
+To better understand the correlation between joviality, income, and spending, comparing the Pearson correlation values. Two major findings:
+
+1.  Higher income does not necessarily lead to higher joviality
+
+2.  Joviality is highly correlated with food spending.
+
+::: panel-tabset
+## Plot
+
+
+```{r}
+#| echo: false
+ggstatsplot::ggcorrmat(
+  data = df,
+  cor.vars = c("Wage","joviality","Recreation","Food","Shelter"))
+```
+
+
+## Code
+
+
+```{r}
+#| eval: false
+ggstatsplot::ggcorrmat(
+  data = df,
+  cor.vars = c("Wage","joviality","Recreation","Food","Shelter"))
+```
+
+:::
+
+
+```{r}
+ggscatterstats(
+  data = df,
+  x = Wage,
+  y = joviality,
+  marginal = FALSE,
+  title='Wage vs Jovality',
+  ggplot.component = list(ggplot2::scale_y_continuous(
+    breaks = seq(0, 1, 0.25),
+    limits = (c(0, 1)))))
+```
+
+```{r}
+p1 <- ggscatterstats(
+  data = df,
+  x = Wage,
+  y = joviality,
+  marginal = FALSE,
+  title='Wage vs Jovality',
+  ggplot.component = list(ggplot2::scale_y_continuous(
+    breaks = seq(0, 1, 0.25),
+    limits = (c(0, 1)))))
+
+p2 <- ggscatterstats(
+  data = df,
+  x = Food,
+  y = joviality,
+  marginal = FALSE,
+  title='Food expense vs Jovality',
+  ggplot.component = list(ggplot2::scale_y_continuous(
+    breaks = seq(0, 1, 0.25),
+    limits = (c(0, 1)))))
+
+cowplot::plot_grid(p1 + theme(axis.title.y = element_text(angle = 0, vjust = 0.5))+
+      
+                   p2 + 
+                        theme(axis.text.y = element_blank(),
+                              axis.ticks.y = element_blank(),
+                              axis.title.y = element_blank() ), 
+                   nrow = 1,
+                   labels = "auto",
+                   align = "v")
+
+```
+

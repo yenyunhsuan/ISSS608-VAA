@@ -1,11 +1,11 @@
 ---
-title: "About"
+title: "About me"
 ---
 
-About this site
+Author
 
-Yen Yun Hsuan (Tina)
+**Yen Yun Hsuan (Tina)**
 
-LinkedIn: <https://www.linkedin.com/in/tina-yen/>
+-   [LinkedIn](https://www.linkedin.com/in/tina-yen/)
 
-email: yhyen.2022\@mitb.smu.edu.sg
+-   [Email](mailto:yhyen.2022@mitb.smu.edu.sg)
