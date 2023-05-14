@@ -375,7 +375,7 @@ prop2 <- ggplot(melted_kid, aes(Category, Value, fill = haveKids)) +
   geom_bar(stat = "identity", position = "dodge", color = "black", size = 0.5) +
   labs(title = "Average Spending Pattern", x = NULL) +
   ylab("Amount") +
-  coord_cartesian(ylim = c(0, 800))+
+  coord_cartesian(ylim = c(0, 850))+
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.4, size = 15, face = "bold"),
@@ -397,7 +397,7 @@ prop1 / prop2
 :::
 
 
-## Wage distribution
+### Wage distribution
 Individuals with children tend to have higher wages, while those without children typically have wages centered around lower values.
 ```{r}
 #Calculate mean wage of groups have/not having kids
@@ -442,7 +442,7 @@ ggplot(data = data.frame(education_level), aes(x = "", y = education_level,
 
 ```
 
-## Difference in total expense
+### Difference in total expense
 Based on the ANOVA test graph, it is apparent that there is a significant difference in the average total expense among participants with different education levels wtih p value smaller than 0.05. 
 However, when conducting pairwise comparisons between the different total expense amounts, there is no significant difference observed.
 ```{r}
@@ -457,7 +457,7 @@ ggbetweenstats(
 )
 ```
 
-## Wage distribution
+### Wage distribution
 When comparing the distribution of wage, can see that graduate group has the highest income, while high school/college and people with low education have income lower than overall income mean.
 ```{r}
 ggplot(data = df_average, aes(x = Wage,y= educationLevel,fill = factor(stat(quantile))
@@ -484,4 +484,65 @@ ggplot(data = df_average, aes(x = Wage,y= educationLevel,fill = factor(stat(quan
 
 
 ```
+
+## Different age
+By categorizing participants into different age groups and comparing their total expenses and wages, observe that the differences among age groups are relatively small. This suggests that age may not be a significant factor influencing financial habits.
+
+::: panel-tabset
+
+## Data
+```{r}
+df_age <- df_average %>% 
+  mutate(age_bins = 
+           cut(age, 
+               breaks = c(17,25,35,45,55,60))
+)
+
 ```
+
+## Plot
+```{r}
+p1 <- ggplot(df_age, 
+       aes(x = age_bins, 
+           y = Wage)) +
+  stat_halfeye(aes(fill=age_bins)) +
+  geom_boxplot(width = .20,
+               outlier.shape = NA) +
+  stat_dots(side = "left", 
+            justification = 1.2, 
+            binwidth = .5,
+            dotsize = 1.5) +
+  coord_flip()+
+  ylab(" ")+
+  ggtitle("Wage of Different Age")+
+  geom_hline(aes(yintercept=median(Wage)),
+             color="black", 
+             size=1)+
+  annotate("text", x = min(as.numeric(df_age$age_bins)), y = 4000, 
+           label = "Median", vjust = 1.5, hjust = 0)
+
+p2 <- ggplot(df_age, 
+       aes(x = age_bins, 
+           y = Total_Expense)) +
+  stat_halfeye(aes(fill=age_bins)) +
+  geom_boxplot(width = .20,
+               outlier.shape = NA) +
+  stat_dots(side = "left", 
+            justification = 1.2, 
+            binwidth = .5,
+            dotsize = 1.5) +
+  coord_flip()+
+  ylab(" ")+
+  ggtitle("Total Expense of Different Age")+
+  geom_hline(aes(yintercept=median(Total_Expense)),
+             color="black", 
+             size=1)+
+  theme(legend.position = "None")+
+  annotate("text", x = min(as.numeric(df_age$age_bins)), y = 1500, 
+           label = "Median", vjust = 1.5, hjust = 0)
+
+p1/p2
+```
+:::
+
+
