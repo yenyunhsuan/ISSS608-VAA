@@ -24,7 +24,7 @@ This take-home exercise are required to reveal the **demographic and financial c
 
 ```{r}
 pacman::p_load(patchwork, tidyverse, ggstatsplot, 
-               ggdist, gganimate, png, gifski, nortest,dplyr,tidyr,lubridate,skimr,ggcorrplot,ggpubr,plotly,
+               ggdist, gganimate, png, gifski,plyr, nortest,dplyr,tidyr,lubridate,skimr,ggcorrplot,ggpubr,plotly,
                ggiraph, DT,ggridges,viridis )
 ```
 
@@ -88,14 +88,14 @@ head(financial)
 There are some duplicate records with same participant ID, category and timestamp. Use distinct function to **drop duplicate rows.** The original amount column contains positive(meaning income) and negative (expense) values. Transform amount to **absolute value** to avoid confusion.
 
 ```{r}
-#| code-fold: true
-#| code-summary: "Show code"
+library(dplyr)
 financial_new <- 
   financial %>% 
   distinct(participantId, category, timestamp,.keep_all = TRUE) %>%
   group_by(participantId, category, Year,Year_Month) %>%
   summarise(amount = round(sum(abs(amount)),1), .groups = 'drop') 
 
+head(financial_new)
 ```
 
 To compare amount of different categories, need to split out the unique values in the "category" column and their corresponding amounts into new columns by [pivot_wider](https://tidyr.tidyverse.org/reference/pivot_wider.html) function. Fill null values with 0.
@@ -265,7 +265,7 @@ p1 <- df_average %>%
   geom_boxplot() +
   scale_fill_manual(values = selected_colors)+
   stat_summary(geom = "point",       
-               fun.y = "mean",         
+               fun = "mean",         
                color = "black",  
                size = 4) +
   labs(x = "Spending category", y = "Amount") +
@@ -323,28 +323,13 @@ ggplot(plot_df) +
 :::
 
 ## With/ without kids
+30% of participants have kids, indicating a difference in family composition. Those without children do not have education expense. Besides, participants with kids tend to have higher average expenses in the shelter category.
 
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-p <- ggplot(data=df_average, 
-       aes(x=haveKids,fill=educationLevel)) +
-  geom_bar()+
-# +
-#   geom_text(stat="count",
-#       aes(label=paste0(
-#       "(",count,") ",round(..count../sum(..count..)*100, 1), "%")),
-#       vjust=-1) +
-  ylab("Count") +
-  xlab("")+
-  coord_cartesian(ylim=c(0,800))
-  theme(axis.title.y=element_text(angle = 0))
-ggplotly(p)
-```
+::: panel-tabset
 
+## Data
 ```{r}
-#| code-fold: true
-#| code-summary: "Show code"
+# Calculate average amount based on number of participants having/not having kids
 summary_kid <- df_average %>%
   group_by(haveKids) %>%
   summarise(across(Education:RentAdjustment,sum),
@@ -352,105 +337,119 @@ summary_kid <- df_average %>%
             .groups = 'drop') %>%
   mutate(across(Education:RentAdjustment, ~round(. / persons, 1)))
 
+# Reshape the data from wide to long format 
 melted_kid <- gather(summary_kid, key = "Category", value = "Value", -haveKids)
 melted_kid <- melted_kid %>% filter(Category != "persons",Category  
                                     !="RentAdjustment",Category != "Wage")
+
+head(melted_kid)
 ```
 
+## Plot
 ```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-prop <- ggplot(melted_kid, 
-                aes(Category, Value, fill =  haveKids)) + 
-  geom_bar(stat = "identity", position = "dodge") +
+prop1 <- ggplot(data = df_average, aes(x = haveKids, fill = haveKids)) +
+  geom_bar(color = "black", size = 0.5) +
+  geom_text(stat = "count",
+            aes(label = paste0("(", count, ") ", round(..count../sum(..count..) * 100, 1), "%")),vjust = -1, color = "black") +
+  labs(title = "Number of Participants with/without Kids",x="",
+       fill = "Have Kids") +
+  ylab("Count") +
+  coord_cartesian(ylim = c(0, 850)) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.4, size = 15, face = "bold"),
+    plot.margin = margin(20, 20, 20, 20),
+    legend.position = "right",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = "bold"),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
-  labs(title = "Spending of have/ not having kids", y = "Average Amount", fill = "Have Kids") +
+# Code to generate `prop2`
+prop2 <- ggplot(melted_kid, aes(Category, Value, fill = haveKids)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black", size = 0.5) +
+  labs(title = "Average Spending Pattern", x = NULL) +
   ylab("Amount") +
-   theme(
-        plot.title = element_text(hjust = 0.4, size = 15, face = 'bold'),
-        plot.margin = margin(20, 20, 20, 20),
-        legend.position = "right",
-        axis.text = element_text(size = 8, face = "bold"),
-        axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1),
-        axis.title.x = element_text(hjust = 0.5, size = 12),
-        axis.title.y = element_text(angle=0,hjust = 0.5, size = 12))
+  coord_cartesian(ylim = c(0, 800))+
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.4, size = 15, face = "bold"),
+    plot.margin = margin(20, 20, 20, 20),
+    legend.position = "None",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = "bold"),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
-ggplotly(prop)
+prop1 / prop2
+
 ```
+:::
 
+
+## Wage distribution
+Individuals with children tend to have higher wages, while those without children typically have wages centered around lower values.
 ```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-prop <- ggplot(melted_kid, 
-                aes(haveKids, Value, fill =  Category )) + 
-  geom_bar(stat = "identity",position = "dodge") +
+#Calculate mean wage of groups have/not having kids
+mukid <- ddply(df_average, "haveKids", summarise, kid.mean=mean(Wage))
 
-  labs(title = "Spending of have/ not having kids", y = "Average Amount", fill = "Have Kids") +
-  ylab("Amount") +
-   theme(
-        plot.title = element_text(hjust = 0.4, size = 15, face = 'bold'),
-        plot.margin = margin(20, 20, 20, 20),
-        legend.position = "right",
-        axis.text = element_text(size = 8, face = "bold"),
-        axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1),
-        axis.title.x = element_text(hjust = 0.5, size = 12),
-        axis.title.y = element_text(angle=0,hjust = 0.5, size = 12))
-prop
-```
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-ggplot(data = df_average, aes(fill = haveKids)) +
-  geom_density(aes(x = Wage), linewidth = 1, alpha = 0.7) +
-  ggtitle("Wage with/without Kids") +
+p<-ggplot(df_average, aes(x=Wage,fill=haveKids))+
+  geom_density(alpha=0.5)+
   scale_y_continuous(NULL, breaks = NULL) +
-  theme_minimal()+
-  geom_vline(aes(xintercept=mean(Wage)),
-             color="red", 
-             linetype="dashed", 
-             size=1) +
-  geom_vline(aes(xintercept=median(Wage)),
-             color="grey30",
-             linetype="dashed", 
-             size=1)+
-  annotate("text", x = mean(df_average$Wage), 
-           y = 0, label = "Mean", color = "red", vjust = -1) +
-  annotate("text", x = median(df_average$Wage), 
-           y = 0, label = "Median", color = "grey30", vjust = 1)
+  labs(title="Wage with/without kids",x="Wage amount")+ 
+  theme(plot.margin = margin(50, 50, 20, 20),
+        legend.position = "None",
+         plot.title = element_text(hjust = 0.4, size = 15, face = "bold")
+       )+
+  facet_grid(haveKids ~ .)
 
+# Add mean lines
+p+geom_vline(data=mukid, aes(xintercept=kid.mean, color="red"),
+             linetype="dashed")+
+  geom_text(data = mukid, aes(x = kid.mean, label = "mean"), 
+            color = "black", y=0,vjust = -1, hjust = -0.5)
 ```
 
 ## Different education level
-
+Majority of participants have completed high school or college as their highest level of education
 ```{r}
-ggplot(data=df_average, 
-       aes(x=educationLevel)) +
-  geom_bar()+
-  geom_text(stat="count", 
-      aes(label=paste0( 
-      round(..count../sum(..count..)*100, 0), "%")),
-      vjust=-1) +
-  coord_cartesian(ylim=c(0,700))+
-  ylab("No. of\nPartipipant") +
-  theme(axis.title.y=element_text(angle = 0))
-```
+# Count percentage of different education level in all participants
+education_level <- prop.table(table(df_average$educationLevel)) * 100
 
-```{r}
-ggplot(data=df_average, aes(x = Wage,fill=educationLevel)) +
-  geom_density(alpha=0.5)+
-  ggtitle("Distribution of Wage by education level")+      
-  scale_y_continuous(NULL,           
-                     breaks = NULL)+
-    coord_cartesian(xlim=c(2500,20000))
+ggplot(data = data.frame(education_level), aes(x = "", y = education_level,
+                                               fill=names(education_level)), 
+                                                 ) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar(theta = "y") +
+   geom_text(aes(label = paste0(round(education_level, 0), "% ")), 
+             position = position_stack(vjust = 0.5)) +
+  labs(title = "Percentage of Education Levels") +
+  labs(title = "Percentage of Education Levels",x="",y="") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 15, face = "bold")
+  )
 
 ```
 
+## Difference in total expense
+Based on the ANOVA test graph, it is apparent that there is a significant difference in the average total expense among participants with different education levels wtih p value smaller than 0.05. 
+However, when conducting pairwise comparisons between the different total expense amounts, there is no significant difference observed.
 ```{r}
 ggbetweenstats(
   data = df_average,
   x = educationLevel, 
-  y = Wage,
+  y = Total_Expense,
   pairwise.comparisons = TRUE, 
   pairwise.display = "s",
   p.adjust.method = "fdr",
@@ -458,89 +457,31 @@ ggbetweenstats(
 )
 ```
 
+## Wage distribution
+When comparing the distribution of wage, can see that graduate group has the highest income, while high school/college and people with low education have income lower than overall income mean.
 ```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-summary <- df_average %>%
-  group_by(educationLevel) %>%
-  summarise(across(Education:Shelter,sum),
-            persons = n_distinct(participantId),
-            .groups = 'drop') %>%
-  mutate(across(Education:Shelter, ~round(. / persons, 1)))
+ggplot(data = df_average, aes(x = Wage,y= educationLevel,fill = factor(stat(quantile))
+           ))+
+  stat_density_ridges(
+    geom = "density_ridges_gradient",
+    calc_ecdf = TRUE, 
+    quantiles = 4,
+    quantile_lines = TRUE,
+    jittered_points = TRUE) +
+  
+  scale_fill_viridis_d(name = "Quartiles")+
+  theme_ridges()+
+  theme(plot.margin = margin(50, 50, 20, 20),
+        legend.position = "None"
+       )+
+  ylab(" ")+
+  ggtitle("Wage of Different education level")+
+  geom_vline(aes(xintercept=mean(Wage)),
+             color="black", 
+             size=2)+
+  annotate("text", x = mean(df_average$Wage), 
+           y = 0, label = "Overall    Mean", color = "black", vjust = 0)
 
-melted <- gather(summary, key = "Category", value = "Value", -educationLevel)
-melted <- melted %>% filter(Category != "persons")
-melted
+
 ```
-
-```{r}
-prop <- ggplot(melted, 
-                aes(educationLevel , Value, fill =Category  )) + 
-  geom_bar(stat = "identity") +
-  labs(title = "Spending of each education level", y = "Average Amount", 
-       fill = "education level") +
-  ylab("Amount") +
-   theme(
-        plot.title = element_text(hjust = 0.4, size = 15, face = 'bold'),
-        plot.margin = margin(20, 20, 20, 20),
-        legend.position = "right",
-        axis.text = element_text(size = 8, face = "bold"),
-        axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1),
-        axis.title.x = element_text(hjust = 0.5, size = 12),
-        axis.title.y = element_text(angle=0,hjust = 0.5, size = 12))
-
-ggplotly(prop)
-```
-
-```{r}
-ggplot(data=df_average, aes(y = Total_Expense,x=haveKids, fill=educationLevel)) +
-  geom_boxplot()+
-  ggtitle("Total Expense")+
-  geom_point(position="jitter", 
-             size = 0.2)
-```
-
-## Difference among age
-
-```{r}
-df_age <- df_average %>% 
-  mutate(age_bins = 
-           cut(age, 
-               breaks = c(17,25,35,45,55,60))
-)
-```
-
-```{r}
-ggbetweenstats(
-  data = df_age,
-  x = age_bins, 
-  y = Wage,
-  pairwise.comparisons = TRUE, 
-  pairwise.display = "s",
-  p.adjust.method = "fdr",
-  messages = FALSE
-)
-```
-
-```{r}
-# write.csv(df_average, "df_average.csv", row.names=FALSE)
-# write.csv(financial_average, "financial_average.csv", row.names=FALSE)
-```
-
-```{r}
-summary_age <- df_age %>%
-  group_by(age_bins) %>%
-  summarise(across(Education:Shelter,sum),
-            persons = n_distinct(participantId),
-            .groups = 'drop') %>%
-  mutate(across(Education:Shelter, ~round(. / persons, 1)))
-
-melted_age <- gather(summary_age, key = "Category", value = "Value", -age_bins)
-melted_age <- melted_age %>% filter(Category != "persons")
-```
-
-```{r}
-ggplot(df_age, aes(x = Total_Expense, y = age_bins,fill=age_bins)) + 
-  geom_density_ridges() + 
-  theme_ridges() 
 ```
