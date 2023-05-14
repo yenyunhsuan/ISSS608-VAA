@@ -78,6 +78,7 @@ GAStech_edges_aggregated
 ```
 
 # Build tidygraph data
+
 ```{r}
 GAStech_graph <- tbl_graph(nodes = GAStech_nodes,
                            edges = GAStech_edges_aggregated,

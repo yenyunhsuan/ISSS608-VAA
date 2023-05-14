@@ -1,5 +1,6 @@
 ---
 title: "Take Home Exercise 1"
+title-block-banner: true
 format: 
   html: 
     code-fold: true
@@ -24,7 +25,7 @@ This take-home exercise are required to reveal the **demographic and financial c
 ```{r}
 pacman::p_load(patchwork, tidyverse, ggstatsplot, 
                ggdist, gganimate, png, gifski, nortest,dplyr,tidyr,lubridate,skimr,ggcorrplot,ggpubr,plotly,
-               ggiraph, DT,ggridges )
+               ggiraph, DT,ggridges,viridis )
 ```
 
 ```{r}
@@ -34,7 +35,7 @@ financial <- read_csv("data/FinancialJournal.csv")
 
 Two data sets are provided. They are:
 
-### Participants
+## Participants
 
 Contains information about the residents of City of Engagement that have agreed to participate in this study.
 
@@ -106,22 +107,10 @@ financial_orginize <- financial_new %>%
   pivot_wider(names_from = category, values_from = amount, values_fill = 0) %>% 
   mutate(Total_Expense=rowSums(select(.,Education,Food,Recreation,Shelter)))
 
-DT::datatable(financial_orginize)
+head(financial_orginize)
 ```
 
 ## Merge two datasets
-
-*Calculate each participant's 12-month wage and spending in the "financial_year" data frame, and join with "participant" by the same participant ID. But each participant has different month records.*
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# financial_year <- financial_orginize %>% 
-#   group_by(participantId) %>%
-#   summarise(across(Education:Total_Expense,sum), .groups = 'drop')
-# df <-  merge(x=financial_year,y=participant,by="participantId")
-# df
-```
 
 Some participants only have 1-month records, so remain participants' records with 12 months, and calculate their monthly average wage and spending in the "financial_average" data frame.
 
@@ -136,27 +125,16 @@ financial_average <- financial_orginize %>%
   filter(Month_count == 12) %>% 
   mutate(across(Education:Total_Expense, ~round(. / Month_count, 1)))
 
-arrange(financial_average,Month_count)
+
 ```
 
 Join with "participant" by the same participant ID.
 
 ```{r}
 df_average <-  merge(x=financial_average,y=participant,by="participantId")
-head(df_average)
-```
 
-## *Data Summary*
+DT::datatable(df_average)
 
-*Show summary for numeric columns by Skimr.*
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# skim(df_average) %>%
-#   dplyr::filter(skim_type == "numeric",
-#                 skim_variable %in%
-#       c("Education","Food","Recreation","Shelter","Total_Expense","RentAdjustment","Wage","joviality","age"))
 ```
 
 # Visualization
@@ -169,120 +147,24 @@ To better understand the correlation between joviality, annual income and spendi
 
 1.  Higher income does not necessarily lead to higher joviality
 
+    With closer examination of the correlation scatter plots, can find that there are participants with extremely high wage. While the majority of participants with wages below the 95th percentile exhibit a wide range of joviality values, those in the **top 5th percentile** of wage earners tend to have joviality values below 0.5.
+
 2.  Joviality is most correlated with recreation spending.
 
+    For participants with spending above the 22th percentile, can observe a positive correlation between spending on recreation and joviality. This suggests that for those who spend more on recreation activities, there is a tendency to experience higher levels of joviality.
+
 ::: panel-tabset
-## Plot
+## Correlation
 
 ```{r}
-#| echo: false
 ggstatsplot::ggcorrmat(
   data = df_average,
   cor.vars = c("Wage","joviality","Recreation","Food","Shelter"))
 ```
 
-## Code
+## Wage v.s Joviality
 
 ```{r}
-#| eval: false
-ggstatsplot::ggcorrmat(
-  data = df_average,
-  cor.vars = c("Wage","joviality","Recreation","Food","Shelter"))
-```
-:::
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# p1 <- ggscatterstats(
-#   data = df,
-#   x = Wage,
-#   y = joviality,
-#   marginal = FALSE,
-#   title='Wage vs Jovality',
-#   ggplot.component = list(ggplot2::scale_y_continuous(
-#     breaks = seq(0, 1, 0.25),
-#     limits = (c(0, 1)))))
-# 
-# p2 <- ggscatterstats(
-#   data = df,
-#   x = Food,
-#   y = joviality,
-#   marginal = FALSE,
-#   title='Food expense vs Jovality',
-#   ggplot.component = list(ggplot2::scale_y_continuous(
-#     breaks = seq(0, 1, 0.25),
-#     limits = (c(0, 1)))))
-# 
-# cowplot::plot_grid(p1 + theme(axis.title.y = element_text(angle = 0, vjust = 0.5))+
-#       
-#                    p2 + 
-#                         theme(axis.text.y = element_blank(),
-#                               axis.ticks.y = element_blank(),
-#                               axis.title.y = element_blank() ), 
-#                    nrow = 1,
-#                    labels = "auto",
-#                    align = "v")
-
-```
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# coorelation plot with all numeric columns (include participant id)
-
-# r <- dplyr::select_if(df, is.numeric)
-# cor_r <- cor(r, use="complete.obs")
-# ggcorrplot(cor_r, 
-#            hc.order = TRUE, 
-#            type = "lower",
-#            lab = TRUE)
-```
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# Mosaic plot (child/education level)
-
-# tbl <- xtabs(~haveKids+ educationLevel, df)
-# ftable(tbl)
-# 
-# library(vcd)
-# 
-# mosaic(tbl, 
-#        shade = TRUE,
-#        legend = TRUE,
-#        labeling = labeling_cboxed,
-#        labeling_args = list(set_varnames = c(haveKids = "Have Kids",
-#                                              educationLevel = "Education Level")),
-#        set_labels = list(haveKids = c("No", "Yes"),
-#                          educationLevel = c("L","College" ,"B",  "Grad")))
-
-```
-
-1.  With closer examination of the correlation scatter plots, can find that there are participants with extremely high wage. While the majority of participants with wages below the 95th percentile exhibit a wide range of joviality values, those in the **top 5th percentile** of wage earners tend to have joviality values below 0.5. This suggests that there may be a **negative** correlation between wage and joviality among participants with the highest incomes.
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# ggplot(df_average, aes(x = Wage, y = joviality)) + 
-#   geom_point(alpha=0.1,size=2) + 
-#   geom_smooth(method = "lm")+
-#   geom_vline(aes(xintercept = quantile(Wage,probs=0.95)), color = "darkgreen",linetype="dashed",linewidth=1)+
-#   geom_hline(aes(yintercept = 0.5), color = "darkorange",linetype="dashed",linewidth=1)+
-#   annotate(
-#     "text",
-#     x = quantile(df_average$Wage, probs = 0.95),
-#     y = 0,
-#     label = "95th Percentile",
-#     color = "darkgreen"
-#   )+
-#   coord_cartesian(ylim=c(0,1))
-```
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
 ggscatterstats(
   data = df_average,
   x = Wage,
@@ -305,18 +187,11 @@ ggscatterstats(
     color = "darkgreen"
   )
 
-
 ```
 
-2.  Upon examining the scatter plot between recreation spending and joviality, an interesting pattern emerges. When separate the recreation spending into two groups based on **about 22-25th percentile**, observe the following findings:
-
--   For participants with spending below the 22th percentile, there is no significant correlation between the spending amount and joviality.
-
--   For participants with spending above the 22th percentile, can observe a **positive** correlation between spending on recreation and joviality. This suggests that for those who spend more on recreation activities, there is a tendency to experience higher levels of joviality.
+## Recreation expense v.s Joviality
 
 ```{r}
-#| code-fold: true
-#| code-summary: "Show code"
 ggscatterstats(
   data = df_average,
   x = Recreation,
@@ -339,135 +214,113 @@ ggscatterstats(
     color = "darkgreen"
   )
 ```
+:::
 
-## *What is the time pattern of transaction*
+## Financial pattern
 
-*To assess changes in overall transaction values throughout the year, create a new table group by month. However, as the participant records for March 2022 are more numerous than those for other months, we exclude this month's data in the plot. Additionally, exclude the education expense category since it is only applicable to part of participants and the value is small.*
+### What is overall transaction distribution and difference
 
-*From the plot, observe that*
-
-1.  *Shelter expenses remain relatively stable throughout the year.*
-
-2.  *Recreation expenses exhibit more fluctuation, starting with the highest value and generally decrease month by month.*
-
-3.  *Food and recreation expenses show a similar range of values.*
+Since each category has a different value range, applying scale of log10 to make the ranges comparable in the same graph. Education expense has the lowest average value, while recreation expense exhibits a larger variance, and food expense is more centered.
 
 ```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# summary <- financial_orginize %>%
-#   group_by(Year_Month) %>%
-#   summarise(across(Food:Shelter,~round(sum(.)/1000)), 
-#             .groups = 'drop')
-# 
-# financial_average <- financial_orginize %>% 
-#   group_by(participantId) %>%
-#   summarise(across(Education:Total_Expense,sum), 
-#             Months = n_distinct(Year_Month), 
-#             .groups = 'drop')
-# 
-# melted_df <- gather(summary, key = "Category", value = "Value", -Year_Month)
-# melted_df <- melted_df %>% filter(Year_Month!= "2022-03")
-```
+# Reshape the data from wide to long format using pivot_longer
+p <- df_average %>%
+  group_by(participantId) %>%
+  summarise(across(Education:Wage),
+            .groups = 'drop') %>% 
+  pivot_longer(cols = -participantId, names_to = "Category", values_to = "Value")
 
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# p <- ggplot(melted_df,aes(x=factor(Year_Month),y = Value,colour = Category,group = Category))+
-#   geom_line()+
-#   geom_point(size = 2)+
-#   coord_cartesian(ylim=c(100,600))+
-#   labs(x = "Year-Month", y = "Amount(1/1000)")+
-#   ggtitle("Participant overall spending")
-#  
-# 
-# 
-# gg <- ggplotly(p,width = 800) 
-# gg
-```
+plot <- ggplot(p,aes(x = Value, fill = Category)) +
+  geom_density_interactive(aes(tooltip=Category),alpha=0.8) +
+# Generate a discrete version from the "viridis" color palette to make the colors more beautiful
+  scale_fill_viridis_d(option = "D")+
+  scale_y_continuous(NULL,           
+                     breaks = NULL)+
+  ggtitle("Financial transaction distribution")+
+  scale_x_log10()
 
-```{r}
-#| code-fold: true
-#| code-summary: "Show code"
-# Plot for total expense and wage
-# summary2 <- financial_orginize %>%
-#   group_by(Year_Month) %>%
-#   summarise(across(Wage:Total_Expense,~round(sum(.)/1000)), 
-#             .groups = 'drop') 
-# 
-# melted_df2 <- gather(summary2, key = "Category", value = "Value", -Year_Month)
-# melted_df2 <- melted_df2 %>% filter(Category!= "RentAdjustment",Year_Month!= "2022-03")
-# 
-# p <- ggplot(melted_df2,aes(x=factor(Year_Month),y = Value,colour = Category,group = Category))+
-#   geom_line()+
-#   geom_point(size = 2)+
-#   coord_cartesian(ylim=c(100,5000))+
-#   labs(x = "Year-Month", y = "Amount(1/1000)")+
-#   ggtitle("Income v.s Expense")
-#  
-# 
-# 
-# gg <- ggplotly(p,width = 800) 
-# gg
-```
-
-```{r}
-# # Use monthly average spending to plot
-
-# # Summarize the data by Year_Month and calculate the sum of each category
-# summary_df <- financial_orginize %>%
-#   group_by(Year_Month) %>%
-#   summarise(across(Education:RentAdjustment,sum), 
-#             persons = n_distinct(participantId), 
-#             .groups = 'drop') %>%
-#   mutate(across(Education:RentAdjustment, ~round(. / persons, 1)))
-# 
-# summary_df
-# melted_df
-# melted_df <- gather(summary_df, key = "Category", value = "Value", -Year_Month)
-# melted_df <- melted_df %>% filter(Category != "persons",Category !="Education",Category !="RentAdjustment",Category !="Wage")
-# 
-# # Plot the line plot
-# p <- ggplot(melted_df,aes(x=factor(Year_Month),y=Value,colour = Category,group = Category))+
-#   geom_line()+
-#   geom_point(size = 2)+
-#   coord_cartesian(ylim=c(200,800))
-#   
-# 
-# p + theme(legend.position="top")
-# # +geom_text(data = melted_df %>% distinct(Category, .keep_all = TRUE),
-#             # aes(label = Category), hjust = 0.5, vjust = 0.5, size = 4, color = c("blue","green","red") ) 
-
+# Create girafe interactive label to easily identify each density category
+girafe(
+  ggobj = plot,
+  width_svg = 6,
+  height_svg = 6 * 0.618
+)                        
 
 ```
 
+Upon closer examination of the expenses in the following categories, food and recreation have similar mean values, while recreation exhibits a larger spread of spending amounts. And shelter expense demonstrates the highest number of outliers.
 
 ```{r}
-# tooltip <- function(y, ymax, accuracy = .01) {
-#   mean <- scales::number(y, accuracy = accuracy)
-#   sem <- scales::number(ymax - y, accuracy = accuracy)
-#   paste("Total expense:", mean, "+/-", sem)
-# }
-# 
-# gg_point <- ggplot(data=df_average, 
-#                    aes(x = educationLevel),
-# ) +
-#   stat_summary(aes(y = Total_Expense, 
-#                    tooltip = after_stat(  
-#                      tooltip(y, ymax))),  
-#     fun.data = "mean_se", 
-#     geom = GeomInteractiveCol,  
-#     fill = "light blue"
-#   ) +
-#   stat_summary(aes(y = Total_Expense),
-#     fun.data = mean_se,
-#     geom = "errorbar", width = 0.2, size = 0.2
-#   )
-# 
-# girafe(ggobj = gg_point,
-#        width_svg = 8,
-#        height_svg = 8*0.618)
+# Use same color from previous plot for the same category
+color_palette <- viridis_pal(option = "D")(5)
+selected_colors <- color_palette[2:4] 
+
+p1 <- df_average %>%
+  group_by(participantId) %>%
+  summarise(across(Food:Shelter),
+            .groups = 'drop') %>% 
+  pivot_longer(cols = -participantId, names_to = "Category", 
+               values_to = "Value") %>%
+  ggplot(aes(y = Value, x = Category, fill = Category)) +
+  geom_boxplot() +
+  scale_fill_manual(values = selected_colors)+
+  stat_summary(geom = "point",       
+               fun.y = "mean",         
+               color = "black",  
+               size = 4) +
+  labs(x = "Spending category", y = "Amount") +
+  theme(legend.position = "none")
+
+ggplotly(p1)
+
 ```
+
+### Standard error bars of mean
+
+To assess the standard error of spending and wage amounts, use z-score normalization to standardize the range. Wage exhibits the largest range of error bars, suggesting a significant level of variability and uncertainty surrounding the wage data from these participants.
+
+::: panel-tabset
+## Data
+
+```{r}
+p <- df_average %>%
+  group_by(participantId) %>%
+  summarise(across(Education:Wage),
+            .groups = 'drop')
+# Select all columns except for participant id, and apply mean/sd calculation to all selected columns
+means <- apply(p[, -1], 2, mean)
+std_errors <- apply(p[, -1], 2, function(x) sd(x) / sqrt(length(x)-1))
+
+# Create a new dataframe with means and standard errors by category
+plot_df <- data.frame(
+  variable = names(means),
+  mean = means,
+  se = std_errors
+)
+
+plot_df <- rownames_to_column(plot_df, var = "row_index") %>%
+  select(-row_index)
+
+knitr::kable(head(plot_df), format = 'html')
+```
+
+## Plot
+
+```{r}
+plot_df$normalized_mean <- scale(plot_df$mean)
+
+ggplot(plot_df) +
+  geom_errorbar_interactive(aes(x=variable,ymin = normalized_mean - se, ymax = normalized_mean + se), width = 0.2) +
+  geom_point(aes
+           (x=variable,y=normalized_mean), 
+           stat="identity", 
+           color="red",
+           size = 1.5,
+           alpha=1)+
+  labs(title = "Normalized Mean and Standard Error", x = "Variable", y = "Mean") 
+
+```
+:::
 
 ## With/ without kids
 
@@ -504,7 +357,6 @@ melted_kid <- melted_kid %>% filter(Category != "persons",Category
                                     !="RentAdjustment",Category != "Wage")
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show code"
@@ -526,7 +378,6 @@ prop <- ggplot(melted_kid,
 ggplotly(prop)
 ```
 
-
 ```{r}
 #| code-fold: true
 #| code-summary: "Show code"
@@ -546,6 +397,7 @@ prop <- ggplot(melted_kid,
         axis.title.y = element_text(angle=0,hjust = 0.5, size = 12))
 prop
 ```
+
 ```{r}
 #| code-fold: true
 #| code-summary: "Show code"
@@ -568,6 +420,7 @@ ggplot(data = df_average, aes(fill = haveKids)) +
            y = 0, label = "Median", color = "grey30", vjust = 1)
 
 ```
+
 ## Different education level
 
 ```{r}
@@ -582,7 +435,6 @@ ggplot(data=df_average,
   ylab("No. of\nPartipipant") +
   theme(axis.title.y=element_text(angle = 0))
 ```
-
 
 ```{r}
 ggplot(data=df_average, aes(x = Wage,fill=educationLevel)) +
@@ -649,6 +501,7 @@ ggplot(data=df_average, aes(y = Total_Expense,x=haveKids, fill=educationLevel)) 
 ```
 
 ## Difference among age
+
 ```{r}
 df_age <- df_average %>% 
   mutate(age_bins = 
@@ -674,7 +527,6 @@ ggbetweenstats(
 # write.csv(financial_average, "financial_average.csv", row.names=FALSE)
 ```
 
-
 ```{r}
 summary_age <- df_age %>%
   group_by(age_bins) %>%
@@ -687,12 +539,8 @@ melted_age <- gather(summary_age, key = "Category", value = "Value", -age_bins)
 melted_age <- melted_age %>% filter(Category != "persons")
 ```
 
-
 ```{r}
 ggplot(df_age, aes(x = Total_Expense, y = age_bins,fill=age_bins)) + 
   geom_density_ridges() + 
   theme_ridges() 
 ```
-
-
-
