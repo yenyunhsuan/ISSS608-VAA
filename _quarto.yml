@@ -5,15 +5,15 @@ website:
   title: "Visual Analytics"
   navbar:
     left:
-    - text: "Hands-on Exercise"
+    - text: "Hands on Exercise"
       menu: 
-        - text: "Hands-on Exercise 1"
+        - text: "Hands-on Exercise 1 Introduction to Visual Analytics"
           href: "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html"
-        - text: "Hands-on Exercise 2"
+        - text: "Hands-on Exercise 2 Designing Graphs to Enlighten"
           href: "Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02.html" 
-        - text: "Hands-on Exercise 3"
+        - text: "Hands-on Exercise 3 	Interactivity in Visual Analytics"
           href: "Hands-on_Ex/Hands-on_Ex03/Hands-on_Ex03.html"
-        - text: "Hands-on Exercise 4"
+        - text: "Hands-on Exercise 4 Visual Statistical Analysis"
           href: "Hands-on_Ex/Hands-on_Ex04/Hands-on_Ex04.html"
     - text: "In class Exercise"
       menu: 
@@ -23,12 +23,16 @@ website:
           href: "In-class_Ex/In-class_Ex03/In-class_Ex03.html"
         - text: "In class Exercise 4"
           href: "In-class_Ex/In-class_Ex04/In-class_Ex04.html"
-        - text: "In-class_Ex05 Network Data Visualisation and Analysis"
+        - text: "In class Exercise 5"
           href: "In-class_Ex/In-class_Ex05/In-class_Ex05.html"
     - text: "Take home Exercise"
       menu: 
-        - text: "Take home Exercise 1"
+        - text: "Take home Exercise 1 Demographic and spending patterns"
           href: "Take-home_Ex/Take-home_Ex01/Take-home_Ex01.html"
+        - text: "Take home Exercise 2"
+          href: "Take-home_Ex/Take-home_Ex02/Take-home_Ex02.html"
+        - text: "Take home Exercise 3"
+          href: "Take-home_Ex/Take-home_Ex03/Take-home_Ex03.html"
        
     right:
       - href: index.qmd

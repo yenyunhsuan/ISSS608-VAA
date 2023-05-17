@@ -1,0 +1,107 @@
+---
+title: "Take Home Exercise 2"
+title-block-banner: true
+format: 
+  html: 
+    code-fold: true
+    code-summary: "Show the code"
+editor: visual
+author: Yen Yun Hsuan
+date: "28 May 2023"
+execute: 
+  warning: false
+---
+
+# Background
+
+This is [Mini-Challenge 2](https://vast-challenge.github.io/2023/MC2.html) of VAST Challenge 2023.
+
+The country of Oceanus has sought FishEye International's help in identifying companies possibly engaged in illegal, unreported, and unregulated (IUU) fishing. As part of the collaboration, FishEye's analysts received **import/export data** for Oceanus' marine and fishing industries. To facilitate their analysis, FishEye transformed the trade data into a knowledge graph. Using this knowledge graph, they hope to understand business relationships, including finding links that will help them stop IUU fishing and protect marine species that are affected by it. FishEye analysts found that **node-link diagrams** gave them a good high-level overview of the knowledge graph. However, they are now looking for visualizations that provide more detail about patterns for entities in the knowledge graph.
+
+# Task
+
+FishEye knows from past experience that companies caught fishing illegally will shut down but will then often start up again under a different name. FishEye wants your help to use visual analytics to identify **temporal patterns** for individual entities and between entities in the knowledge graph FishEye created from trade records. Categorize the **types of business relationship patterns** you find. Limit your response to 600 words and 6 images.
+
+# Data preparation
+
+## Installing and launching R packages
+
+```{r}
+pacman::p_load(igraph, tidygraph, ggraph, 
+               visNetwork, lubridate, clock,
+               tidyverse, graphlayouts,jsonlite)
+```
+
+## Import data
+
+```{r}
+MC2 <- fromJSON("data/mc2_challenge_graph.json")
+```
+
+At the root-level, MC2 is a dictionary with graph-level properties specified as keys ( directed , mulitgraph , graph ). The nodes and links keys provide a dictionary of the nodes and links.
+
+Below extract data frame from MC2 list as tibble table.
+
+### Nodes
+
+Use select to reorder column sequences, with id column in the first.
+
++--------------+----------------------------------------------------------------+
+| Col name     | Description                                                    |
++==============+================================================================+
+| id           | Name of the company that originated (or received) the shipment |
++--------------+----------------------------------------------------------------+
+| shpcountry   | Country the company most often associated with when shipping   |
++--------------+----------------------------------------------------------------+
+| rcvcountry   | Country the company most often associated with when receiving  |
++--------------+----------------------------------------------------------------+
+
+```{r}
+MC2_nodes <- as_tibble(MC2$nodes) %>% 
+  select(id,shpcountry, rcvcountry)
+glimpse(MC2_nodes)
+```
+
+### Edges
+
+Use select to drop columns of "valueofgoodusd" with lots of NA, and drop "dataset" which is no need.
+
+```{r}
+MC2_edges <- as_tibble(MC2$links) %>% 
+  select(-valueofgoodsusd, -dataset)
+
+glimpse(MC2_edges)
+
+```
+
+::: callout-caution
+## Notice
+
+the arrivaldate is treated as "Character" data type instead of date data type. Need to change the data type back to "Date"" data type.
+:::
+
+```{r}
+MC2_edges <- MC2_edges %>% 
+  mutate(arrival_date  = dmy(arrivaldate )) %>% 
+# Also create a column Year as factor format
+  mutate(Year = as.factor(year(arrivaldate)))
+
+glimpse(MC2_edges)
+```
+
++------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
+| Col name         | Description                                                                                                           |        |
++==================+=======================================================================================================================+========+
+| arrival_date     | Date the shipment arrived at port                                                                                     |        |
++------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
+| hscode           | Harmonized System code for the shipment                                                                               |        |
++------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
+| valueofgoods_omu | Customs-declared value of the total shipment                                                                          |        |
++------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
+| volumeteu        | The volume of the shipment in 'Twenty-foot equivalent units', roughly\                                                |        |
+|                  | how many 20-foot standard containers would be required.                                                               |        |
++------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
+| weightkg         | The weight of the shipment in kilograms                                                                               |        |
++------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
+| Source/ target   | Some shipper(source) and receiver names/countries(target) was anonymized, so some are represented by numerical names. |        |
++------------------+-----------------------------------------------------------------------------------------------------------------------+--------+

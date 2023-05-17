@@ -1,5 +1,4 @@
 ---
-title-block-banner: true
 title: "In-class_Ex05"
 plain: "Network Data Visualisation and Analysis"
 format: 
