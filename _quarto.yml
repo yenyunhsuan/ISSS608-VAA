@@ -15,6 +15,10 @@ website:
           href: "Hands-on_Ex/Hands-on_Ex03/Hands-on_Ex03.html"
         - text: "Hands-on Exercise 4 Visual Statistical Analysis"
           href: "Hands-on_Ex/Hands-on_Ex04/Hands-on_Ex04.html"
+        - text: "Hands-on Exercise 5 Network Data Visualisation and Analysis"
+          href: "Hands-on_Ex/Hands-on_Ex05/Hands-on_Ex05.html"
+        - text: "Hands-on Exercise 6 Visual Multivariate Analysis"
+          href: "Hands-on_Ex/Hands-on_Ex06/Hands-on_Ex06.html"
     - text: "In class Exercise"
       menu: 
         - text: "In class Exercise 1"
