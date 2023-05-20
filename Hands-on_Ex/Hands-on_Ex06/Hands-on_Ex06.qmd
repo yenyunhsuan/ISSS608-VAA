@@ -16,6 +16,10 @@ execute:
 pacman::p_load('plotly', 'tidyverse','ggstatsplot')
 ```
 
+```{r}
+require(devtools)
+```
+
 ### Dowload ggtern
 
 -   [**ggtern**](http://www.ggtern.com/), a ggplot extension specially designed to plot ternary diagrams. The package will be used to plot static ternary plot
@@ -36,8 +40,8 @@ Derive three new measures, namely: young, active, and old
 ```{r}
 agpop_mutated <- pop_data %>% 
   mutate(Year = as.character(Year)) %>% 
-# Unique values in AG seperate to distinct columns, fill with corresponding Population value
-  spread(AG, Population) %>% 
+# use pivot_wider to seperate Unique values in AG into distinct columns, fill with corresponding Population value
+  pivot_wider(names_from = AG, values_from = Population) %>% 
 #calculate the sum of values in columns 4 to 8 (AG columns) for each row
   mutate(YOUNG = rowSums(.[4:8])) %>% 
   mutate(ACTIVE  = rowSums(.[9:16])) %>% 
@@ -166,6 +170,8 @@ pairs(wine[,2:12],
 ### Multiple plot
 
 ```{r}
+#| fig-width: 18
+#| fig-height: 8
 grouped_ggcorrmat(
   data = wine,
   cor.vars = 1:11,
@@ -714,8 +720,12 @@ ggplot(data = realis_selected,
 
 ## Interactive treemap
 ```{r}
-library(devtools)
 library(d3treeR)
+```
+
+```{r}
+library(devtools)
+install_github("timelyportfolio/d3treeR")
 ```
 
 ```{r}
@@ -729,6 +739,6 @@ tm <- treemap(realis2018_summarised,
 ```
 
 ```{r}
-d3tree(tm,rootname = "Singapore")
+d3tree(tm,rootname = "Singapore" )
 ```
 

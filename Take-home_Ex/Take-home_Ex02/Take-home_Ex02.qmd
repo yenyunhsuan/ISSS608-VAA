@@ -41,32 +41,41 @@ pacman::p_load(igraph, tidygraph, ggraph,
 MC2 <- fromJSON("data/mc2_challenge_graph.json")
 ```
 
-At the root-level, MC2 is a dictionary with graph-level properties specified as keys ( directed , mulitgraph , graph ). The nodes and links keys provide a dictionary of the nodes and links.
+At the root-level, MC2 is a dictionary with graph-level properties specified as keys.
 
 Below extract data frame from MC2 list as tibble table.
 
 ### Nodes
 
-Rename id as label, and create a new column "id".\
-Use select to reorder column sequences, with id column in the first.
+-   *(Rename id as label, and create a new column "id")*
 
-+-------------+----------------------------------------------------------------+
-| Col name    | Description                                                    |
-+=============+================================================================+
-| label       | Name of the company that originated (or received) the shipment |
-+-------------+----------------------------------------------------------------+
-| shpcountry  | Country the company most often associated with when shipping   |
-+-------------+----------------------------------------------------------------+
-| rcvcountry  | Country the company most often associated with when receiving  |
-+-------------+----------------------------------------------------------------+
+-   Use select to reorder column sequences, with id column in the first.
+
+-   There are many NA values in shpcountry and rcvcountry columns, and it is hard to fill in those NA values, so exclude these two columns.
+
++--------------+------------------------------------------------------------------+
+| Col name     | Description                                                      |
++==============+==================================================================+
+| *id*         | *Unique integers representing each company*                      |
++--------------+------------------------------------------------------------------+
+| *label*      | *Name of the company that originated (or received) the shipment* |
++--------------+------------------------------------------------------------------+
+| *shpcountry* | *Country the company most often associated with when shipping*   |
++--------------+------------------------------------------------------------------+
+| *rcvcountry* | *Country the company most often associated with when receiving*  |
++--------------+------------------------------------------------------------------+
 
 ```{r}
-MC2_nodes <- as_tibble(MC2$nodes) %>% 
-  rename(label = id) %>% 
-  mutate(id = row_number()) %>% 
-  select(id,label,shpcountry, rcvcountry) 
+MC2_node <- as_tibble(MC2$nodes) 
+colSums(is.na(MC2_node))
+
+MC2_nodes <- MC2_node%>% 
+  # rename(label = id) %>% 
+  # mutate(id = row_number()) %>% 
+  select(id,-shpcountry, -rcvcountry) 
+
 glimpse(MC2_nodes)
-colSums(is.na(MC2_nodes))
+
 ```
 
 ### Edges
@@ -97,53 +106,64 @@ MC2_edges <- MC2_edges %>%
   mutate(arrival_date  = ymd(arrivaldate )) %>% 
 # Also create a column Year as factor format
   mutate(Year = as.factor(year(arrivaldate))) %>% 
-  mutate(Month = as.factor(month(arrivaldate)))
+  mutate(Month = as.factor(month(arrivaldate))) %>% 
+  select(- arrivaldate)
 
 glimpse(MC2_edges)
 ```
 
-+--------------------+-----------------------------------------------------------------------------------------------------------------------+
-| **Col name**       | **Description**                                                                                                       |
-+--------------------+-----------------------------------------------------------------------------------------------------------------------+
-| arrival_date       | Date the shipment arrived at port                                                                                     |
-+--------------------+-----------------------------------------------------------------------------------------------------------------------+
-| hscode             | Harmonized System code (commodity code) for the shipment                                                              |
-+--------------------+-----------------------------------------------------------------------------------------------------------------------+
-| *valueofgoods_omu* | *Customs-declared value of the total shipment*                                                                        |
-+--------------------+-----------------------------------------------------------------------------------------------------------------------+
-| *volumeteu*        | *The volume of the shipment in 'Twenty-foot equivalent units', roughly\                                               |
-|                    | how many 20-foot standard containers would be required.*                                                              |
-+--------------------+-----------------------------------------------------------------------------------------------------------------------+
-| weightkg           | The weight of the shipment in kilograms                                                                               |
-+--------------------+-----------------------------------------------------------------------------------------------------------------------+
-| Source/ target     | Some shipper(source) and receiver names/countries(target) was anonymized, so some are represented by numerical names. |
-+--------------------+-----------------------------------------------------------------------------------------------------------------------+
-
-Join with MC2_nodes to get source ID (rename as from) and target ID (rename as to).\
-Rename source as sourcelabel, and target as targetlabel.\
-Filter out sourcelabel, targetlabel that is not in MC2_nodes.
++-------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| **Col name**            | **Description**                                                                                                       |
++-------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| arrival_date/Year/Month | Date/Year/Month the shipment arrived at port                                                                          |
++-------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| hscode                  | Harmonized System code (commodity code) for the shipment                                                              |
++-------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| *valueofgoods_omu*      | *Customs-declared value of the total shipment*                                                                        |
++-------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| *volumeteu*             | *The volume of the shipment in 'Twenty-foot equivalent units', roughly\                                               |
+|                         | how many 20-foot standard containers would be required.*                                                              |
++-------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| weightkg                | The weight of the shipment in kilograms                                                                               |
++-------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| Source/ target          | Some shipper(source) and receiver names/countries(target) was anonymized, so some are represented by numerical names. |
++-------------------------+-----------------------------------------------------------------------------------------------------------------------+
 
 ```{r}
-MC2_edge_result <- merge(MC2_edges, MC2_nodes, by.x = "source", 
-                by.y = "label", all.x = TRUE) %>% 
-  rename(sourcelabel = source) %>% 
-   rename(from = id) %>% 
-  select(-shpcountry,rcvcountry) %>% 
-  filter(sourcelabel %in% MC2_nodes$label) %>% 
-  left_join(MC2_nodes, by = c( "target" ="label" )) %>% 
-  rename(targetlabel = target) %>% 
-   rename(to = id) %>% 
-  select(-rcvcountry.x,-rcvcountry.y,-shpcountry)%>%
-  filter(targetlabel %in% MC2_nodes$label)
+# Check all source/target in edges is in nodes
+MC2_edges <- MC2_edges %>% 
+   filter(source %in% MC2_nodes$id) %>% 
+   filter(target  %in% MC2_nodes$id)
+```
 
-glimpse(MC2_edge_result)
+*Join with MC2_nodes to get source ID (rename as from) and target ID (rename as to).\
+Rename source as sourcelabel, and target as targetlabel.\
+Filter out sourcelabel, targetlabel that is not in MC2_nodes.*
+
+*Maybe no need to create extra sourcelabel*
+
+```{r}
+# MC2_edge_result <- merge(MC2_edges, MC2_nodes, by.x = "source", 
+#                 by.y = "label", all.x = TRUE) %>% 
+#   rename(sourcelabel = source) %>% 
+#    rename(from = id) %>% 
+#   select(-shpcountry,rcvcountry) %>% 
+#   filter(sourcelabel %in% MC2_nodes$label) %>% 
+#   left_join(MC2_nodes, by = c( "target" ="label" )) %>% 
+#   rename(targetlabel = target) %>% 
+#    rename(to = id) %>% 
+#   select(-rcvcountry.x,-rcvcountry.y,-shpcountry)%>%
+#   filter(targetlabel %in% MC2_nodes$label)
+# 
+# glimpse(MC2_edge_result)
 
 ```
 
 ## Wrangling attributes
 
+*group by year and hscode, remain all columns, but row numbers are big*
+
 ```{r}
-#group by year and hscode, remain all columns
 
 # MC2_edges_aggregate <- MC2_edges %>% 
 #   group_by(source, target, Year, hscode) %>% 
@@ -153,9 +173,11 @@ glimpse(MC2_edge_result)
 # MC2_edges_aggregate
 ```
 
+MC2_edges_aggregated: Group and aggregated by source, target and **Year**.
+
 ```{r}
-MC2_edges_aggregated <- MC2_edge_result %>% 
-  group_by(from, to, Year) %>% 
+MC2_edges_aggregated <- MC2_edges %>% 
+  group_by(source, target, Year) %>% 
    summarise(Weight = n(), .groups = "drop")
 # filter the top 1% frequency records
   # filter(Weight >= quantile(Weight, 0.99))
@@ -163,41 +185,57 @@ MC2_edges_aggregated <- MC2_edge_result %>%
 glimpse(MC2_edges_aggregated)
 ```
 
-Drop columns (shpcountry,rcvcountry) with NA value in MC2_nodes
+MC2_edges_grouped: Group and aggregated by source, target
 
 ```{r}
-MC2_node_drop <- MC2_nodes %>% 
-  select(-shpcountry, -rcvcountry) 
+MC2_edges_grouped <- MC2_edges %>% 
+  group_by(source, target) %>% 
+   summarise(Weight = n(), .groups = "drop")
 
-glimpse(MC2_node_drop)
-
+glimpse(MC2_edges_grouped)
 ```
 
-## Build tidygraph model
-
-Build an tidygraph's network graph data.frame, arrange Year in edges by ascending order.
+Filter edge data by weight, and filter corresponding nodes.
 
 ```{r}
-MC2_graph <- tbl_graph(nodes = MC2_node_drop,
-                       edges = MC2_edges_aggregated)
-
-MC2_graph
-```
-
-```{r}
-MC2_edges_weight <- MC2_edges_aggregated %>% 
+MC2_edges_weight <- MC2_edges_grouped %>% 
   filter(Weight >= 300)
 
-edge_nodes <- unique(c(MC2_edges_weight$from, 
-                       MC2_edges_weight$to))
+edge_nodes <- unique(c(MC2_edges_weight$source, 
+                       MC2_edges_weight$target))
 
 # Filter nodes based on IDs
-MC2_node_filter <- MC2_node_drop %>%
+MC2_node_filter <- MC2_nodes %>%
   filter(id %in% edge_nodes)
 ```
 
 ```{r}
-graph <- igraph::graph_from_data_frame(MC2_edges_weight, vertices = MC2_node_filter) %>% as_tbl_graph()
+MC2_edges_filter <- MC2_edges_aggregated %>% 
+  filter(Weight >= 300)
+
+edge_nodes <- unique(c(MC2_edges_filter$source, 
+                       MC2_edges_filter$target))
+
+# Filter nodes based on IDs
+MC2_node_select <- MC2_nodes %>%
+  filter(id %in% edge_nodes)
+```
+
+## Build tidygraph model
+
+Build an tidygraph's network graph data.frame.
+
+```{r}
+MC2_graph2 <- tbl_graph(nodes = MC2_node_filter,
+                       edges = MC2_edges_weight)
+
+MC2_graph2
+```
+
+```{r}
+#another way to turn edge and node into tibble dataframe
+
+graph <- igraph::graph_from_data_frame(MC2_edges_filter, vertices = MC2_node_select) %>% as_tbl_graph()
 graph
 ```
 
