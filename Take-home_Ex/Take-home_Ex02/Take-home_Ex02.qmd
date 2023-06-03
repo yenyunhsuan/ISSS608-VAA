@@ -16,7 +16,8 @@ execute:
 
 This is [Mini-Challenge 2](https://vast-challenge.github.io/2023/MC2.html) of VAST Challenge 2023.
 
-The country of Oceanus has sought FishEye International's help in identifying companies possibly engaged in illegal, unreported, and unregulated (IUU) fishing. As part of the collaboration, FishEye's analysts received **import/export data** for Oceanus' marine and fishing industries. To facilitate their analysis, FishEye transformed the trade data into a knowledge graph. Using this knowledge graph, they hope to understand business relationships, including finding links that will help them stop IUU fishing and protect marine species that are affected by it. FishEye analysts found that **node-link diagrams** gave them a good high-level overview of the knowledge graph. However, they are now looking for visualizations that provide more detail about patterns for entities in the knowledge graph.
+The country of Oceanus has sought FishEye International's help in identifying companies possibly engaged in illegal, unreported, and unregulated (IUU) fishing.\
+To facilitate their analysis, FishEye transformed the trade data into a knowledge graph. Using this knowledge graph, they hope to understand business relationships, including finding links that will help them stop IUU fishing and protect marine species that are affected by it. They are now looking for visualizations that provide more **detail about patterns for entities** in the knowledge graph.
 
 # Task
 
@@ -27,9 +28,11 @@ FishEye knows from past experience that companies caught fishing illegally will 
 ## Installing and launching R packages
 
 ```{r}
-pacman::p_load(igraph, tidygraph, ggraph, 
+pacman::p_load(igraph, jsonlite, ggraph,igraphdata, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts,jsonlite)
+               tidyverse, graphlayouts,jsonlite,gtsummary,
+               tinygraph,seriation, dendextend, heatmaply,dplyr,ggplot2,
+               gridExtra, tidygraph)
 ```
 
 ## Import data
@@ -38,70 +41,498 @@ pacman::p_load(igraph, tidygraph, ggraph,
 MC2 <- fromJSON("data/mc2_challenge_graph.json")
 ```
 
-At the root-level, MC2 is a dictionary with graph-level properties specified as keys ( directed , mulitgraph , graph ). The nodes and links keys provide a dictionary of the nodes and links.
+At the root-level, MC2 is a dictionary with graph-level properties specified as keys.
 
 Below extract data frame from MC2 list as tibble table.
 
 ### Nodes
 
-Use select to reorder column sequences, with id column in the first.
+-   Use select to reorder column sequences, with id column in the first.
 
-+--------------+----------------------------------------------------------------+
-| Col name     | Description                                                    |
-+==============+================================================================+
-| id           | Name of the company that originated (or received) the shipment |
-+--------------+----------------------------------------------------------------+
-| shpcountry   | Country the company most often associated with when shipping   |
-+--------------+----------------------------------------------------------------+
-| rcvcountry   | Country the company most often associated with when receiving  |
-+--------------+----------------------------------------------------------------+
+-   There are many NA values in shpcountry and rcvcountry columns, and it is hard to fill in those NA values, so exclude these two columns.
+
+| Col name   | Description                                                   |
+|------------|---------------------------------------------------------------|
+| id         | Unique integers representing each company                     |
+| shpcountry | Country the company most often associated with when shipping  |
+| rcvcountry | Country the company most often associated with when receiving |
 
 ```{r}
-MC2_nodes <- as_tibble(MC2$nodes) %>% 
-  select(id,shpcountry, rcvcountry)
+MC2_node <- as_tibble(MC2$nodes) 
+colSums(is.na(MC2_node))
+
+MC2_nodes <- MC2_node%>% 
+  select(id,-shpcountry, -rcvcountry) 
+
 glimpse(MC2_nodes)
+
 ```
 
 ### Edges
 
-Use select to drop columns of "valueofgoodusd" with lots of NA, and drop "dataset" which is no need.
+Examine the missing values and features format in Edge data.
 
 ```{r}
-MC2_edges <- as_tibble(MC2$links) %>% 
-  select(-valueofgoodsusd, -dataset)
+MC2_edge <- as_tibble(MC2$links) 
 
-glimpse(MC2_edges)
+colSums(is.na(MC2_edge))
 
+glimpse(MC2_edge)
 ```
 
 ::: callout-caution
 ## Notice
 
-the arrivaldate is treated as "Character" data type instead of date data type. Need to change the data type back to "Date"" data type.
+The arrivaldate is treated as "Character" data type instead of date data type. Need to change the data type back to "Date"" data type.
 :::
 
+Use select to drop three "value-" columns with lots of NA, and drop "dataset" which is no need.
+
 ```{r}
-MC2_edges <- MC2_edges %>% 
-  mutate(arrival_date  = dmy(arrivaldate )) %>% 
+MC2_edges <- MC2_edge%>%
+  mutate(arrival_date  = ymd(arrivaldate )) %>% 
 # Also create a column Year as factor format
-  mutate(Year = as.factor(year(arrivaldate)))
+  mutate(Year = as.factor(year(arrivaldate))) %>%
+  select(source, target, arrival_date, Year, hscode, weightkg) %>% distinct()
 
 glimpse(MC2_edges)
 ```
 
-+------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
-| Col name         | Description                                                                                                           |        |
-+==================+=======================================================================================================================+========+
-| arrival_date     | Date the shipment arrived at port                                                                                     |        |
-+------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
-| hscode           | Harmonized System code for the shipment                                                                               |        |
-+------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
-| valueofgoods_omu | Customs-declared value of the total shipment                                                                          |        |
-+------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
-| volumeteu        | The volume of the shipment in 'Twenty-foot equivalent units', roughly\                                                |        |
-|                  | how many 20-foot standard containers would be required.                                                               |        |
-+------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
-| weightkg         | The weight of the shipment in kilograms                                                                               |        |
-+------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
-| Source/ target   | Some shipper(source) and receiver names/countries(target) was anonymized, so some are represented by numerical names. |        |
-+------------------+-----------------------------------------------------------------------------------------------------------------------+--------+
+|                   |                                                                                                                       |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------|
+| **Col name**      | **Description**                                                                                                       |
+| arrival_date/Year | Date/Year the shipment arrived at port                                                                                |
+| hscode            | Harmonized System code (commodity code) for the shipment                                                              |
+| weightkg          | The weight of the shipment in kilograms                                                                               |
+| Source/ target    | Some shipper(source) and receiver names/countries(target) was anonymized, so some are represented by numerical names. |
+
+Group and aggregated by source, target and Year.
+
+```{r}
+MC2_edges_aggregated <- MC2_edges %>% 
+  group_by(source, target, Year) %>% 
+   summarise(Weight = n(), .groups = "drop")
+
+glimpse(MC2_edges_aggregated)
+```
+
+Count hscode weight
+
+```{r}
+hscode <- MC2_edges %>% 
+  group_by( hscode) %>% 
+   summarise(Weight = n(), .groups = "drop")
+
+glimpse(arrange(hscode, desc(Weight)))
+```
+
+Filter edge data by weight, only remain Weight \>=95 quantile,\
+and filter corresponding nodes, then build a tidygraph model.
+
+```{r}
+# MC2_edges_filter <- MC2_edges_aggregated %>% 
+#   filter(Weight >= quantile(Weight,0.95))
+# 
+# id1 <- MC2_edges_filter %>%
+#   select(source) %>%
+#   rename(id = source)
+# id2 <- MC2_edges_filter %>%
+#   select(target) %>%
+#   rename(id = target)
+# mc2_nodes_extracted <- rbind(id1, id2) %>%
+#   distinct()
+# 
+# graph <- igraph::graph_from_data_frame(MC2_edges_filter, vertices = mc2_nodes_extracted) %>% as_tbl_graph()
+# 
+# graph
+```
+
+### Count in-degree and out-degree by unique edge
+
+```{r}
+edges_out <- MC2_edges %>%
+        group_by(source, target) %>% 
+  summarize(.groups = "drop") %>% 
+  group_by(source) %>% 
+  summarize(Weight = n(), .groups = "drop")
+
+edges_in <- MC2_edges %>%
+        group_by(target, source) %>% 
+  summarize(.groups = "drop") %>% 
+  group_by(target) %>% 
+  summarize(Weight = n(), .groups = "drop")
+
+degree_in <- merge(x = MC2_nodes, y = edges_in, by.x = "id", by.y = "target", all.x = TRUE)
+
+degree <- merge(x = degree_in, y = edges_out, by.x = "id", by.y = "source", all.x = TRUE)
+
+degree[is.na(degree)] <- 0
+
+```
+
+### Count in-degree and out-degree by total weight
+
+```{r}
+# create in-link weights for each source-target combination
+edges_out_weight <- MC2_edges %>%
+        group_by(source, target) %>%
+        summarise(weight = n(),.groups = "drop") %>% 
+  group_by(source) %>% 
+  rename(company = source) %>% 
+        summarise(out_degree = sum(weight))
+      
+
+# create out-link weights for each target-source combination
+edges_in_weight <- MC2_edges %>%
+        group_by(target, source) %>% 
+        summarise(weight = n(),.groups = "drop") %>% 
+  group_by(target) %>% 
+  rename(company = target) %>% 
+        summarise(in_degree = sum(weight)) 
+```
+
+Select top 5 out-weight/ in-weight companies
+
+```{r}
+# create data frame of top 10 firms with highest out-degree 
+top_in <-
+head(edges_in_weight[order(edges_in_weight$in_degree, 
+decreasing = T),],n=5)
+
+top_out <-
+head(edges_out_weight[order(edges_out_weight$out_degree, 
+decreasing = T),],n=5)
+
+head(top_out)
+```
+
+# Network visualization by high weight
+
+```{r}
+# g <- ggraph(graph,
+#             layout = "nicely") +
+#   geom_edge_link(aes(width = Weight)) +
+#   scale_edge_width(range = c(0.01, 1))+
+#   geom_node_point(aes())
+# 
+# g+ theme_graph()
+```
+
+```{r}
+# g <- graph %>%
+#   mutate(betweenness_centrality = centrality_betweenness()) %>%
+#   ggraph(layout = "fr") + 
+#   geom_edge_link(aes(width=Weight, color = Year)) +
+#   scale_edge_width(range = c(0.1, 5)) +
+#   geom_node_point(aes(
+#             size=betweenness_centrality))
+# g + theme_graph()
+```
+
+```{r}
+# g <- graph %>%
+#   mutate(community = as.factor(group_edge_betweenness(weights = Weight, directed = TRUE))) %>%
+#   ggraph(layout = "fr") + 
+#   geom_edge_link(aes(width=Weight), 
+#                  alpha=0.2) +
+#   scale_edge_width(range = c(0.1, 5)) +
+#   geom_node_point(aes(colour = community))  
+# 
+# g + theme_graph()
+```
+
+# Temporal pattern
+
+## Interrupted pattern
+
+The edges include records from 2028 to 2034, filter companies with higher numbers of shipment (here is weight \> 100) in the first two years 2028 and 2029.
+
+```{r}
+MC2_edge_high <- MC2_edges %>%
+  filter(Year %in% c(2028, 2029)) %>%
+  group_by(source,Year) %>%
+  summarise(weight = n(),.groups = "drop") %>%
+  filter(weight > 100)
+head(MC2_edge_high)
+```
+
+By following these steps, we can identify companies with high shipment records in the specified years and evaluate whether there are any anomalies in their temporal patterns.
+
+1.  Calculate the distinct number of years for each company.
+
+2.  Determine the maximum and minimum year for each company to calculate the number of periods.
+
+3.  Filter the companies that have missing records in some years.
+
+```{r}
+MC2_edge_abnormal <- MC2_edges%>%
+  filter(source %in% MC2_edge_high$source) %>% 
+  group_by(source) %>% 
+  mutate(distinct_year = n_distinct(Year)) %>% 
+  mutate(Year = as.numeric(as.character(Year))) %>%
+  group_by(source,distinct_year) %>% 
+  summarize(max_year = max(Year), min_year = min(Year),.groups = "drop") %>% 
+  mutate(period = max_year-min_year+1) %>% 
+  filter(period >1) %>% 
+  filter(period - distinct_year>2 )
+
+glimpse(MC2_edge_abnormal)
+```
+
+Filter only the sources that were identified as abnormal in the previous step, and calculate the sum of the Weight by source and year.
+
+```{r}
+MC2_node_abnor <- MC2_edges_aggregated %>%
+  filter(source %in% MC2_edge_abnormal$source) %>%  
+  group_by(source,Year) %>%
+  summarise(Weight = sum(Weight), .groups = "drop")
+head(MC2_node_abnor)
+```
+
+```{r}
+#|warning: false
+g1 <- ggplot(MC2_node_abnor, aes(Year,source)) +
+  geom_tile(aes(fill = Weight)) +
+  geom_text(aes(label = Weight),size = 3) +
+  labs(title = "Irregular temporal pattern by total weight")+
+  scale_fill_gradient(low = "white", high = "red")+
+  # adjust angle to be 45 to avoid overlapping
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(axis.text.y = element_text(size = 7))
+```
+
+```{r}
+
+MC2_node_abno <- MC2_edges %>%
+  filter(source %in% MC2_edge_abnormal$source) %>%  
+  group_by(source, target,Year) %>% 
+  summarize(.groups = "drop") %>% 
+  group_by(source,Year) %>% 
+  summarize(Weight = n(), .groups = "drop")
+
+#|warning: false
+g2 <- ggplot(MC2_node_abno, aes(Year,source)) +
+  geom_tile(aes(fill = Weight)) +
+  geom_text(aes(label = Weight),size = 3) +
+  scale_fill_gradient(low = "white", high = "red")+
+  # adjust angle to be 45 to avoid overlapping
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(axis.text.y = element_text(size = 7))+
+  labs(title = "Out-Degree Connections")
+```
+
+```{r}
+arranged_plots <- grid.arrange(g1, g2, nrow = 2)
+```
+
+We can observe these companies experienced a peak in the weight of shipments during the years 2028 and 2029. However, there is a substantial gap in their shipment records for several years, and shipments resumed with a significantly lower number of shipments per year.
+
+Furthermore, when examining the number of companies these companies ship out to, it becomes evident that both Omo River and Ocean Explorers have experienced a significant drop in the number of outbound connections to other companies. On the other hand, the remaining companies generally have less than five outbound connections each.
+
+### Interactive network plot
+
+From the MC2_edges_aggregated dataframe(group_by source,target,year), filter source that appears to be irregular from previous step.
+
+```{r}
+MC2_edge_irregular <- MC2_edges_aggregated %>% 
+  filter(source %in% MC2_node_abnor$source) %>% 
+  rename(from = source) %>%
+  rename(to = target) 
+```
+
+Filter node data and build tidygraph model: Prepare a new nodes data table by using the source and target fields of MC2_edge_irregular data table to ensure that the nodes in nodes data tables include all the source and target values.
+
+```{r}
+id1 <- MC2_edge_irregular %>%
+  select(from) %>%
+  rename(id = from)
+id2 <- MC2_edge_irregular %>%
+  select(to) %>%
+  rename(id = to)
+MC2_node_abnormal <- rbind(id1, id2) %>%
+  distinct()
+
+MC2_graph_abnormal <- tbl_graph(nodes = MC2_node_abnormal,
+                       edges = MC2_edge_irregular)
+
+MC2_graph_abnormal
+```
+
+From the interactive plot, it is evident that two companies, Ocean Explorers GmbH & Co. KG Cargo and Omo River N.V. Carriers, have the highest number of outbound edges, indicating their involvement in multiple business relationships with several other companies.
+
+```{r}
+visNetwork(MC2_node_abnormal, 
+           MC2_edge_irregular,
+           main = "Irregular companies out degree") %>%
+  visIgraphLayout(layout = "layout_with_fr") %>% 
+  visEdges(arrows = "to", 
+           smooth = list(enabled = TRUE, 
+                         type = "curvedCW")) %>%
+  visLegend() %>%
+    visOptions(highlightNearest = TRUE,nodesIdSelection = TRUE) %>% 
+  visLayout(randomSeed = 123)%>% 
+  visInteraction(navigationButtons = TRUE)
+```
+
+If filter those companies with irregular temporal pattern in target, we can see that Ocean Explorers GmbH & Co. KG Cargo is not in the plot, showing that it does not receive from any company, This suggests a one-sided business relationship, where it may operate as a supplier or distributor .
+
+```{r}
+MC2_edge_irregular <- MC2_edges_aggregated %>% 
+  filter(target %in% MC2_node_abnor$source) %>% 
+  rename(from = source) %>%
+  rename(to = target) 
+
+id1 <- MC2_edge_irregular %>%
+  select(from) %>%
+  rename(id = from)
+id2 <- MC2_edge_irregular %>%
+  select(to) %>%
+  rename(id = to)
+MC2_node_abnormal <- rbind(id1, id2) %>%
+  distinct()
+
+MC2_graph_abnormal <- tbl_graph(nodes = MC2_node_abnormal,
+                       edges = MC2_edge_irregular)
+
+
+visNetwork(MC2_node_abnormal, 
+           MC2_edge_irregular,
+           main = "Irregular companies in degree") %>%
+  visIgraphLayout(layout = "layout_with_fr") %>% 
+  visEdges(arrows = "to", 
+           smooth = list(enabled = TRUE, 
+                         type = "curvedCW")) %>%
+  visLegend() %>%
+    visOptions(highlightNearest = TRUE,nodesIdSelection = TRUE) %>% 
+  visLayout(randomSeed = 123)%>% 
+  visInteraction(navigationButtons = TRUE)
+```
+
+## Continuous pattern
+
+Comparing with the temporal pattern of top 5 companies with most numbers of shipments, we can find that those companies have shipment records throughout 2028 to 2034 without interruption, showing more stable and regular business pattern.
+
+```{r}
+MC2_node_normal <- MC2_edges_aggregated %>%
+  filter(source %in% top_out$company) %>%  
+  group_by(source,Year) %>%
+  summarise(Weight = sum(Weight), .groups = "drop")
+
+g_1 <- ggplot(MC2_node_normal, aes(Year,source)) +
+  geom_tile(aes(fill = Weight)) +
+  geom_text(aes(label = Weight),size = 2) +
+  labs(title = "Continuous temporal pattern by total weight")+
+  scale_fill_gradient(low = "white", high = "lightblue")+
+  # adjust angle to be 45 to avoid overlapping
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(axis.text.y = element_text(size = 7)) 
+```
+
+```{r}
+MC2_node_regular <- MC2_edges %>%
+  filter(source %in% top_out$company) %>%  
+  group_by(source, target,Year) %>% 
+  summarize(.groups = "drop") %>% 
+  group_by(source,Year) %>% 
+  summarize(Weight = n(), .groups = "drop")
+
+#|warning: false
+g_2 <- ggplot(MC2_node_regular, aes(Year,source)) +
+  geom_tile(aes(fill = Weight)) +
+  geom_text(aes(label = Weight),size = 3) +
+  labs(title = "Out-degree connections")+
+  scale_fill_gradient(low = "white", high = "lightblue")+
+  # adjust angle to be 45 to avoid overlapping
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(axis.text.y = element_text(size = 7))+
+  labs(title = "Out-Degree Connections")
+
+plots <- grid.arrange(g_1, g_2, nrow = 2)
+```
+
+### Interactive network plot
+
+```{r}
+MC2_edge_regu <- MC2_edges %>%
+  filter(source == "Fresh Limited Liability Company") %>%
+  group_by(source, target) %>%
+  summarize(.groups = "drop") %>%
+  rename(from = source) %>%
+  rename(to = target)
+
+MC2_edge_regu
+```
+
+```{r}
+MC2_edge_regular <- MC2_edges_aggregated %>% 
+  filter(source %in% MC2_node_regular$source) %>% 
+  rename(from = source) %>%
+  rename(to = target) 
+```
+
+```{r}
+id1 <- MC2_edge_regular %>%
+  select(from) %>%
+  rename(id = from)
+id2 <- MC2_edge_regular %>%
+  select(to) %>%
+  rename(id = to)
+MC2_node_normal <- rbind(id1, id2) %>%
+  distinct()
+
+MC2_graph_normal <- tbl_graph(nodes = MC2_node_normal,
+                       edges = MC2_edge_regular)
+
+sample(MC2_graph_normal)
+```
+
+```{r}
+visNetwork(MC2_node_abnormal, 
+           MC2_edge_irregular,
+           main = "Irregular companies out degree") %>%
+  visIgraphLayout(layout = "layout_with_fr") %>% 
+  visEdges(arrows = "to", 
+           smooth = list(enabled = TRUE, 
+                         type = "curvedCW")) %>%
+  visLegend() %>%
+    visOptions(highlightNearest = TRUE,nodesIdSelection = TRUE) %>% 
+  visLayout(randomSeed = 123)%>% 
+  visInteraction(navigationButtons = TRUE)
+```
+
+### Continuous pattern with weight around 100 per year
+
+```{r}
+MC2_edge_continuous <- MC2_edges%>%
+  filter(source %in% MC2_edge_high$source) %>%
+  group_by(source) %>%
+  mutate(distinct_year = n_distinct(Year)) %>%
+  mutate(Year = as.numeric(as.character(Year))) %>%
+  group_by(source,distinct_year) %>%
+  summarize(max_year = max(Year), min_year = min(Year),.groups = "drop") %>%
+  mutate(period = max_year-min_year+1) %>%
+  filter(period ==7) %>%
+  filter(distinct_year==7 )
+```
+
+```{r}
+MC2_nor <- MC2_edges_aggregated %>%
+  filter(source %in% MC2_edge_continuous$source) %>% 
+  group_by(source,Year) %>% 
+  summarise(Weight = sum(Weight), .groups = "drop") %>% 
+  filter(Weight<200) %>% 
+  group_by(source) %>% 
+  filter(sum(Weight) > 1000) %>% 
+  filter(n_distinct(Year)==7)
+```
+
+```{r}
+ggplot(MC2_nor, aes(Year,source)) +
+  geom_tile(aes(fill = Weight)) +
+  geom_text(aes(label = Weight),size = 3) +
+  labs(title = "regular temporal pattern by total weight")+
+  scale_fill_gradient(low = "white", high = "red")+
+  # adjust angle to be 45 to avoid overlapping
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(axis.text.y = element_text(size = 7))
+```

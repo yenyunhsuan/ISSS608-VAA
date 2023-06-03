@@ -1,3 +1,58 @@
 ---
 title: "Take-home_Ex03"
+title-block-banner: true
+format: 
+  html: 
+    code-fold: true
+    code-summary: "Show the code"
+editor: visual
+author: Yen Yun Hsuan
+date: "11 June 2023"
+execute: 
+  warning: false
 ---
+
+## Background
+
+This is [Mini-Challenge 3](https://vast-challenge.github.io/2023/MC3.html) of VAST Challenge 2023.
+
+FishEye International, a non-profit focused on countering illegal, unreported, and unregulated (IUU) fishing, has been given access to an international finance corporation's database on fishing related companies. FishEye has transformed the database into a knowledge graph. It includes information about companies, owners, workers, and financial status. FishEye is aiming to use this graph to **identify anomalies** that could indicate a company is involved in IUU.
+
+FishEye analysts have attempted to use traditional node-link visualizations and standard graph analyses, but these were found to be ineffective because the scale and detail in the data can obscure a business's true structure. Can you help FishEye develop a **new visual analytics approach** to better understand fishing business anomalies?
+
+## Tasks and Questions:
+
+Develop a visual analytics process to find **similar businesses and group the**m. This analysis should focus on a business's **most important features and present** those features clearly to the user. Limit your response to 400 words and 5 images.
+
+Data preparation
+
+## Installing and launching R packages
+
+```{r}
+pacman::p_load(igraph, tidygraph, ggraph, 
+               visNetwork, lubridate, clock,
+               tidyverse, graphlayouts,jsonlite,gtsummary,
+               tinygraph)
+```
+
+## Import data
+
+```{r}
+MC3 <- fromJSON("data/MC3.json")
+```
+
+```{r}
+MC3_nodes <- as_tibble(MC3$nodes) 
+
+glimpse(MC3_nodes)
+```
+
+```{r}
+MC3_edges <- as_tibble(MC3$links) 
+ 
+glimpse(MC3_edges)
+```
+
+```{r}
+
+```

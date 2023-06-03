@@ -25,7 +25,7 @@ This take-home exercise are required to reveal the **demographic and financial c
 ```{r}
 pacman::p_load(patchwork, tidyverse, ggstatsplot, 
                ggdist, gganimate, png, gifski,plyr, nortest,dplyr,tidyr,lubridate,skimr,ggcorrplot,ggpubr,plotly,
-               ggiraph, DT,ggridges,viridis )
+               ggiraph, DT,ggridges,viridis,transformr )
 ```
 
 ```{r}
@@ -88,6 +88,7 @@ head(financial)
 There are some duplicate records with same participant ID, category and timestamp. Use distinct function to **drop duplicate rows.** The original amount column contains positive(meaning income) and negative (expense) values. Transform amount to **absolute value** to avoid confusion.
 
 ```{r}
+detach(package:plyr)
 library(dplyr)
 financial_new <- 
   financial %>% 
@@ -216,6 +217,44 @@ ggscatterstats(
 ```
 :::
 
+### Building regression with uncertainty
+
+::: panel-tabset
+## Recreation expense v.s Joviality
+
+```{r}
+bs <- ungeviz::bootstrapper(20)
+
+
+ggplot(df_average, aes(Recreation, joviality)) +
+  geom_smooth(method = "lm", color = NA) +
+  geom_point(alpha = 0.3) +
+  geom_point(data = bs, aes(group = .row)) +
+  geom_smooth(data = bs, method = "lm", fullrange = TRUE, se = FALSE) +
+  theme_bw() +
+  transition_states(.draw, 1, 1) + 
+  enter_fade() + 
+  exit_fade()
+```
+
+## Wage v.s Joviality
+
+```{r}
+bs <- ungeviz::bootstrapper(20)
+
+
+ggplot(df_average, aes(Wage, joviality)) +
+  geom_smooth(method = "lm", color = NA) +
+  geom_point(alpha = 0.3) +
+  geom_point(data = bs, aes(group = .row)) +
+  geom_smooth(data = bs, method = "lm", fullrange = TRUE, se = FALSE) +
+  theme_bw() +
+  transition_states(.draw, 1, 1) + 
+  enter_fade() + 
+  exit_fade()
+```
+:::
+
 ## Financial pattern
 
 ### What is overall transaction distribution and difference
@@ -323,11 +362,12 @@ ggplot(plot_df) +
 :::
 
 ## With/ without kids
+
 30% of participants have kids, indicating a difference in family composition. Those without children do not have education expense. Besides, participants with kids tend to have higher average expenses in the shelter category.
 
 ::: panel-tabset
-
 ## Data
+
 ```{r}
 # Calculate average amount based on number of participants having/not having kids
 summary_kid <- df_average %>%
@@ -346,6 +386,7 @@ head(melted_kid)
 ```
 
 ## Plot
+
 ```{r}
 prop1 <- ggplot(data = df_average, aes(x = haveKids, fill = haveKids)) +
   geom_bar(color = "black", size = 0.5) +
@@ -396,11 +437,13 @@ prop1 / prop2
 ```
 :::
 
-
 ### Wage distribution
+
 Individuals with children tend to have higher wages, while those without children typically have wages centered around lower values.
+
 ```{r}
 #Calculate mean wage of groups have/not having kids
+library(plyr)
 mukid <- ddply(df_average, "haveKids", summarise, kid.mean=mean(Wage))
 
 p<-ggplot(df_average, aes(x=Wage,fill=haveKids))+
@@ -421,7 +464,9 @@ p+geom_vline(data=mukid, aes(xintercept=kid.mean, color="red"),
 ```
 
 ## Different education level
+
 Majority of participants have completed high school or college as their highest level of education
+
 ```{r}
 # Count percentage of different education level in all participants
 education_level <- prop.table(table(df_average$educationLevel)) * 100
@@ -443,8 +488,9 @@ ggplot(data = data.frame(education_level), aes(x = "", y = education_level,
 ```
 
 ### Difference in total expense
-Based on the ANOVA test graph, it is apparent that there is a significant difference in the average total expense among participants with different education levels wtih p value smaller than 0.05. 
-However, when conducting pairwise comparisons between the different total expense amounts, there is no significant difference observed.
+
+Based on the ANOVA test graph, it is apparent that there is a significant difference in the average total expense among participants with different education levels wtih p value smaller than 0.05. However, when conducting pairwise comparisons between the different total expense amounts, there is no significant difference observed.
+
 ```{r}
 ggbetweenstats(
   data = df_average,
@@ -458,7 +504,9 @@ ggbetweenstats(
 ```
 
 ### Wage distribution
+
 When comparing the distribution of wage, can see that graduate group has the highest income, while high school/college and people with low education have income lower than overall income mean.
+
 ```{r}
 ggplot(data = df_average, aes(x = Wage,y= educationLevel,fill = factor(stat(quantile))
            ))+
@@ -486,11 +534,12 @@ ggplot(data = df_average, aes(x = Wage,y= educationLevel,fill = factor(stat(quan
 ```
 
 ## Different age
+
 By categorizing participants into different age groups and comparing their total expenses and wages, observe that the differences among age groups are relatively small. This suggests that age may not be a significant factor influencing financial habits.
 
 ::: panel-tabset
-
 ## Data
+
 ```{r}
 df_age <- df_average %>% 
   mutate(age_bins = 
@@ -498,9 +547,11 @@ df_age <- df_average %>%
                breaks = c(17,25,35,45,55,60))
 )
 
+knitr::kable(head(df_age), format = 'html')
 ```
 
 ## Plot
+
 ```{r}
 p1 <- ggplot(df_age, 
        aes(x = age_bins, 
@@ -544,5 +595,3 @@ p2 <- ggplot(df_age,
 p1/p2
 ```
 :::
-
-

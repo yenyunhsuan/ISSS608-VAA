@@ -99,7 +99,7 @@ plot_ly(
   )
 ```
 
-# Visual Correlation Analysis 
+# Visual Correlation Analysis
 
 ## Data preparation
 
@@ -210,8 +210,7 @@ grouped_ggcorrmat(
 wine.cor <- cor(wine[,1:11])
 ```
 
-Blue colours are used to represent pair variables with positive correlation coefficients and red colours are used to represent pair variables with negative correlation coefficients.
-Darker colours indicate relatively stronger linear relationship between the paired variables.
+Blue colours are used to represent pair variables with positive correlation coefficients and red colours are used to represent pair variables with negative correlation coefficients. Darker colours indicate relatively stronger linear relationship between the paired variables.
 
 ```{r}
 corrplot(wine.cor)
@@ -219,7 +218,7 @@ corrplot(wine.cor)
 
 ### Customize the design
 
-The default is \"full\" which display full matrix, and circle shape.
+The default is "full" which display full matrix, and circle shape.
 
 Can change by method and type.
 
@@ -288,3 +287,19 @@ corrplot(wine.cor,
          hclust.method = "ward.D",
          addrect = 3) #specific cells or regions that will be highlighted depend on the correlation matrix and the highest absolute correlation values
 ```
+
+# Heatmap for Visualising and Analysing Multivariate Data
+
+## Install packages
+
+```{r}
+pacman::p_load(seriation, dendextend, heatmaply,tidyverse)
+```
+
+## Import data
+
+```{r}
+
+```
+
+## 
