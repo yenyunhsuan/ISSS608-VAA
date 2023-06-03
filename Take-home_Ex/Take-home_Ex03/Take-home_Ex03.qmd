@@ -16,25 +16,15 @@ execute:
 
 This is [Mini-Challenge 3](https://vast-challenge.github.io/2023/MC3.html) of VAST Challenge 2023.
 
-<<<<<<< HEAD
 FishEye International, a non-profit focused on countering illegal, unreported, and unregulated (IUU) fishing, has been given access to an international finance corporation's database on fishing related companies. FishEye has transformed the database into a knowledge graph. It includes information about companies, owners, workers, and financial status. FishEye is aiming to use this graph to **identify anomalies** that could indicate a company is involved in IUU.
 
 FishEye analysts have attempted to use traditional node-link visualizations and standard graph analyses, but these were found to be ineffective because the scale and detail in the data can obscure a business's true structure. Can you help FishEye develop a **new visual analytics approach** to better understand fishing business anomalies?
 
 ## Tasks and Questions:
 
-Develop a visual analytics process to find **similar businesses and group the**m. This analysis should focus on a business's **most important features and present** those features clearly to the user. Limit your response to 400 words and 5 images.
-=======
-FishEye International, a non-profit focused on countering illegal, unreported, and unregulated (IUU) fishing, has been given access to an international finance corporation\'s database on fishing related companies. FishEye has transformed the database into a knowledge graph. It includes information about companies, owners, workers, and financial status. FishEye is aiming to use this graph to **identify anomalies** that could indicate a company is involved in IUU.
+Develop a visual analytics process to find **similar businesses and group them**. This analysis should focus on a business's **most important features and present** those features clearly to the user. Limit your response to 400 words and 5 images.
 
-FishEye analysts have attempted to use traditional node-link visualizations and standard graph analyses, but these were found to be ineffective because the scale and detail in the data can obscure a business\'s true structure. Can you help FishEye develop a **new visual analytics approach** to better understand fishing business anomalies?
-
-## Tasks and Questions:
-
-Develop a visual analytics process to find **similar businesses and group the**m. This analysis should focus on a business\'s **most important features and present** those features clearly to the user. Limit your response to 400 words and 5 images.
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
-
-Data preparation
+# Data preparation
 
 ## Installing and launching R packages
 
@@ -42,14 +32,16 @@ Data preparation
 pacman::p_load(igraph, tidygraph, ggraph, 
                visNetwork, lubridate, clock,
                tidyverse, graphlayouts,jsonlite,gtsummary,
-               tinygraph)
+               tinygraph, ggforce, tidytext)
 ```
 
-## Import data
+## Import json file by using jsonlite package
 
 ```{r}
 MC3 <- fromJSON("data/MC3.json")
 ```
+
+Column format in MC3_nodes is all list, need to transform the format.
 
 ```{r}
 MC3_nodes <- as_tibble(MC3$nodes) 
@@ -57,15 +49,74 @@ MC3_nodes <- as_tibble(MC3$nodes)
 glimpse(MC3_nodes)
 ```
 
+Transform the list format into character, and calculate the weight grouping by source, target and type.
+
 ```{r}
-MC3_edges <- as_tibble(MC3$links) 
+MC3_edges <- as_tibble(MC3$links) %>% 
+  distinct() %>% 
+  mutate(source = as.character(source),
+         target = as.character(target),
+         type = as.character(type)) %>% 
+  group_by(source, target, type) %>% 
+  summarise(weights = n(), .groups = "drop") %>% 
+  filter(source != target) 
  
 glimpse(MC3_edges)
 ```
-<<<<<<< HEAD
+
+-   Same country may have different id, so cannot use distinct function, or some ids may be excluded
+
+-   revenue_omu should be numerical value, so first transform the list into character, then need to transform into numeric
+
+-   Reorder the dataframe column sequence by select, with id coming first
+
+-   Replace NA value in revenue_omu with 0
+
+-   Replace "character\[0\] in product_services with blank
+
+```{r}
+MC3_nodes <- as_tibble(MC3$nodes) %>% 
+  mutate(country = as.character(country),
+         id = as.character(id),
+         product_services = as.character(product_services),
+         revenue_omu = as.numeric(as.character(revenue_omu)),
+         type = as.character(type))%>% 
+  select(id, country, type, revenue_omu, product_services) %>% 
+  mutate(revenue_omu = replace(revenue_omu, is.na(revenue_omu), 0),
+         product_services = replace(product_services, product_services == "character(0)", ""))
+
+
+ 
+glimpse(MC3_nodes)
+```
+
+# Explore distribution
+
+# Tokenisation for the text
+
+-   to_lower: Treat word with/without capitals as same words
+
+-   Remove away punctuations
+
+```{r}
+tidy_nodes <- MC3_nodes %>% 
+  unnest_tokens(word,
+                product_services,
+                to_lower = TRUE,
+                strip_punct =TRUE)
+```
+
+## Remove stopwords
+
+Use the stop_words package, and use anti_join to remove those stopwords in tidy_nodes
+
+```{r}
+tidy_stopwords <- tidy_nodes %>% 
+  anti_join(stop_words)
+```
+
+## Look for top key words
 
 ```{r}
 
 ```
-=======
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98

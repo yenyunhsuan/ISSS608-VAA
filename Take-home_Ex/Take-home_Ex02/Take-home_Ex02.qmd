@@ -36,12 +36,8 @@ FishEye knows from past experience that companies caught fishing illegally will 
 pacman::p_load(igraph, jsonlite, ggraph,igraphdata, 
                visNetwork, lubridate, clock,
                tidyverse, graphlayouts,jsonlite,gtsummary,
-<<<<<<< HEAD
-               tinygraph,seriation, dendextend, heatmaply,dplyr,ggplot2,
+               tinygraph,seriation, dendextend,heatmaply,dplyr,ggplot2,
                gridExtra, tidygraph)
-=======
-               tinygraph)
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
 ```
 
 ## Import data
@@ -56,7 +52,6 @@ Below extract data frame from MC2 list as tibble table.
 
 ### Nodes
 
-<<<<<<< HEAD
 -   Use select to reorder column sequences, with id column in the first.
 
 -   There are many NA values in shpcountry and rcvcountry columns, and it is hard to fill in those NA values, so exclude these two columns.
@@ -66,36 +61,13 @@ Below extract data frame from MC2 list as tibble table.
 | id         | Unique integers representing each company                     |
 | shpcountry | Country the company most often associated with when shipping  |
 | rcvcountry | Country the company most often associated with when receiving |
-=======
--   *(Rename id as label, and create a new column "id")*
-
--   Use select to reorder column sequences, with id column in the first.
-
--   There are many NA values in shpcountry and rcvcountry columns, and it is hard to fill in those NA values, so exclude these two columns.
-
-+--------------+------------------------------------------------------------------+
-| Col name     | Description                                                      |
-+==============+==================================================================+
-| *id*         | *Unique integers representing each company*                      |
-+--------------+------------------------------------------------------------------+
-| *label*      | *Name of the company that originated (or received) the shipment* |
-+--------------+------------------------------------------------------------------+
-| *shpcountry* | *Country the company most often associated with when shipping*   |
-+--------------+------------------------------------------------------------------+
-| *rcvcountry* | *Country the company most often associated with when receiving*  |
-+--------------+------------------------------------------------------------------+
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
 
 ```{r}
-MC2_node <- as_tibble(MC2$nodes) 
+MC2_node <- as_tibble(MC2$nodes)  
 colSums(is.na(MC2_node))
 
-MC2_nodes <- MC2_node%>% 
-<<<<<<< HEAD
-=======
-  # rename(label = id) %>% 
-  # mutate(id = row_number()) %>% 
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
+
+MC2_nodes <- MC2_node %>% 
   select(id,-shpcountry, -rcvcountry) 
 
 glimpse(MC2_nodes)
@@ -104,7 +76,6 @@ glimpse(MC2_nodes)
 
 ### Edges
 
-<<<<<<< HEAD
 Examine the missing values and features format in Edge data.
 
 ```{r}
@@ -113,22 +84,9 @@ MC2_edge <- as_tibble(MC2$links)
 colSums(is.na(MC2_edge))
 
 glimpse(MC2_edge)
-=======
+```
 Use select to drop three "value-" columns with lots of NA, and drop "dataset" which is no need.
 
-```{r}
-MC2_edge <- as_tibble(MC2$links) 
-
-colSums(is.na(MC2_edge))
-```
-
-```{r}
-MC2_edges <- MC2_edge%>% 
-  select(-valueofgoodsusd, -dataset,-valueofgoods_omu, -volumeteu  )
-
-glimpse(MC2_edges)
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
-```
 
 ::: callout-caution
 ## Notice
@@ -136,23 +94,13 @@ glimpse(MC2_edges)
 The arrivaldate is treated as "Character" data type instead of date data type. Need to change the data type back to "Date"" data type.
 :::
 
-Use select to drop three "value-" columns with lots of NA, and drop "dataset" which is no need.
 
 ```{r}
-<<<<<<< HEAD
 MC2_edges <- MC2_edge%>%
   mutate(arrival_date  = ymd(arrivaldate )) %>% 
 # Also create a column Year as factor format
   mutate(Year = as.factor(year(arrivaldate))) %>%
   select(source, target, arrival_date, Year, hscode, weightkg) %>% distinct()
-=======
-MC2_edges <- MC2_edges %>% 
-  mutate(arrival_date  = ymd(arrivaldate )) %>% 
-# Also create a column Year as factor format
-  mutate(Year = as.factor(year(arrivaldate))) %>% 
-  mutate(Month = as.factor(month(arrivaldate))) %>% 
-  select(- arrivaldate)
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
 
 glimpse(MC2_edges)
 ```
@@ -167,85 +115,15 @@ glimpse(MC2_edges)
 | Source/ target    | Some shipper(source) and receiver names/countries(target) was anonymized, so some are represented by numerical names. |
 
 Group and aggregated by source, target and Year.
-=======
-+-------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| **Col name**            | **Description**                                                                                                       |
-+-------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| arrival_date/Year/Month | Date/Year/Month the shipment arrived at port                                                                          |
-+-------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| hscode                  | Harmonized System code (commodity code) for the shipment                                                              |
-+-------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| *valueofgoods_omu*      | *Customs-declared value of the total shipment*                                                                        |
-+-------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| *volumeteu*             | *The volume of the shipment in 'Twenty-foot equivalent units', roughly\                                               |
-|                         | how many 20-foot standard containers would be required.*                                                              |
-+-------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| weightkg                | The weight of the shipment in kilograms                                                                               |
-+-------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| Source/ target          | Some shipper(source) and receiver names/countries(target) was anonymized, so some are represented by numerical names. |
-+-------------------------+-----------------------------------------------------------------------------------------------------------------------+
-
-```{r}
-# Check all source/target in edges is in nodes
-MC2_edges <- MC2_edges %>% 
-   filter(source %in% MC2_nodes$id) %>% 
-   filter(target  %in% MC2_nodes$id)
-```
-
-*Join with MC2_nodes to get source ID (rename as from) and target ID (rename as to).\
-Rename source as sourcelabel, and target as targetlabel.\
-Filter out sourcelabel, targetlabel that is not in MC2_nodes.*
-
-*Maybe no need to create extra sourcelabel*
-
-```{r}
-# MC2_edge_result <- merge(MC2_edges, MC2_nodes, by.x = "source", 
-#                 by.y = "label", all.x = TRUE) %>% 
-#   rename(sourcelabel = source) %>% 
-#    rename(from = id) %>% 
-#   select(-shpcountry,rcvcountry) %>% 
-#   filter(sourcelabel %in% MC2_nodes$label) %>% 
-#   left_join(MC2_nodes, by = c( "target" ="label" )) %>% 
-#   rename(targetlabel = target) %>% 
-#    rename(to = id) %>% 
-#   select(-rcvcountry.x,-rcvcountry.y,-shpcountry)%>%
-#   filter(targetlabel %in% MC2_nodes$label)
-# 
-# glimpse(MC2_edge_result)
-
-```
-
-## Wrangling attributes
-
-*group by year and hscode, remain all columns, but row numbers are big*
-
-```{r}
-
-# MC2_edges_aggregate <- MC2_edges %>% 
-#   group_by(source, target, Year, hscode) %>% 
-#    mutate(number = row_number()) %>% 
-#   select(source, target, arrival_date,Year, Month, hscode, weightkg)
-# 
-# MC2_edges_aggregate
-```
-
-MC2_edges_aggregated: Group and aggregated by source, target and **Year**.
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
 
 ```{r}
 MC2_edges_aggregated <- MC2_edges %>% 
   group_by(source, target, Year) %>% 
    summarise(Weight = n(), .groups = "drop")
-<<<<<<< HEAD
-=======
-# filter the top 1% frequency records
-  # filter(Weight >= quantile(Weight, 0.99))
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
 
 glimpse(MC2_edges_aggregated)
 ```
 
-<<<<<<< HEAD
 Count hscode weight
 
 ```{r}
@@ -255,28 +133,6 @@ hscode <- MC2_edges %>%
 
 glimpse(arrange(hscode, desc(Weight)))
 ```
-
-Filter edge data by weight, only remain Weight \>=95 quantile,\
-and filter corresponding nodes, then build a tidygraph model.
-
-```{r}
-# MC2_edges_filter <- MC2_edges_aggregated %>% 
-#   filter(Weight >= quantile(Weight,0.95))
-# 
-# id1 <- MC2_edges_filter %>%
-#   select(source) %>%
-#   rename(id = source)
-# id2 <- MC2_edges_filter %>%
-#   select(target) %>%
-#   rename(id = target)
-# mc2_nodes_extracted <- rbind(id1, id2) %>%
-#   distinct()
-# 
-# graph <- igraph::graph_from_data_frame(MC2_edges_filter, vertices = mc2_nodes_extracted) %>% as_tbl_graph()
-# 
-# graph
-```
-
 ### Count in-degree and out-degree by unique edge
 
 ```{r}
@@ -335,42 +191,6 @@ decreasing = T),],n=5)
 
 head(top_out)
 ```
-
-# Network visualization by high weight
-
-```{r}
-# g <- ggraph(graph,
-#             layout = "nicely") +
-#   geom_edge_link(aes(width = Weight)) +
-#   scale_edge_width(range = c(0.01, 1))+
-#   geom_node_point(aes())
-# 
-# g+ theme_graph()
-```
-
-```{r}
-# g <- graph %>%
-#   mutate(betweenness_centrality = centrality_betweenness()) %>%
-#   ggraph(layout = "fr") + 
-#   geom_edge_link(aes(width=Weight, color = Year)) +
-#   scale_edge_width(range = c(0.1, 5)) +
-#   geom_node_point(aes(
-#             size=betweenness_centrality))
-# g + theme_graph()
-```
-
-```{r}
-# g <- graph %>%
-#   mutate(community = as.factor(group_edge_betweenness(weights = Weight, directed = TRUE))) %>%
-#   ggraph(layout = "fr") + 
-#   geom_edge_link(aes(width=Weight), 
-#                  alpha=0.2) +
-#   scale_edge_width(range = c(0.1, 5)) +
-#   geom_node_point(aes(colour = community))  
-# 
-# g + theme_graph()
-```
-
 # Temporal pattern
 
 ## Interrupted pattern
@@ -418,13 +238,13 @@ MC2_node_abnor <- MC2_edges_aggregated %>%
   summarise(Weight = sum(Weight), .groups = "drop")
 head(MC2_node_abnor)
 ```
-
+### Plot heatmap
 ```{r}
 #|warning: false
 g1 <- ggplot(MC2_node_abnor, aes(Year,source)) +
   geom_tile(aes(fill = Weight)) +
   geom_text(aes(label = Weight),size = 3) +
-  labs(title = "Irregular temporal pattern by total weight")+
+  labs(title = "Irregular pattern by total weight")+
   scale_fill_gradient(low = "white", high = "red")+
   # adjust angle to be 45 to avoid overlapping
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
@@ -613,7 +433,14 @@ MC2_node_normal <- rbind(id1, id2) %>%
 MC2_graph_normal <- tbl_graph(nodes = MC2_node_normal,
                        edges = MC2_edge_regular)
 
-sample(MC2_graph_normal)
+MC2_graph_normal
+```
+
+```{r}
+sampled_nodes <- 100
+
+# Sample a subset of nodes from the graph
+sampled_graph <- sample_n(MC2_graph_normal, size = sampled_nodes, replace = FALSE)
 ```
 
 ```{r}
@@ -665,94 +492,5 @@ ggplot(MC2_nor, aes(Year,source)) +
   # adjust angle to be 45 to avoid overlapping
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   theme(axis.text.y = element_text(size = 7))
-=======
-MC2_edges_grouped: Group and aggregated by source, target
-
-```{r}
-MC2_edges_grouped <- MC2_edges %>% 
-  group_by(source, target) %>% 
-   summarise(Weight = n(), .groups = "drop")
-
-glimpse(MC2_edges_grouped)
 ```
 
-Filter edge data by weight, and filter corresponding nodes.
-
-```{r}
-MC2_edges_weight <- MC2_edges_grouped %>% 
-  filter(Weight >= 300)
-
-edge_nodes <- unique(c(MC2_edges_weight$source, 
-                       MC2_edges_weight$target))
-
-# Filter nodes based on IDs
-MC2_node_filter <- MC2_nodes %>%
-  filter(id %in% edge_nodes)
-```
-
-```{r}
-MC2_edges_filter <- MC2_edges_aggregated %>% 
-  filter(Weight >= 300)
-
-edge_nodes <- unique(c(MC2_edges_filter$source, 
-                       MC2_edges_filter$target))
-
-# Filter nodes based on IDs
-MC2_node_select <- MC2_nodes %>%
-  filter(id %in% edge_nodes)
-```
-
-## Build tidygraph model
-
-Build an tidygraph's network graph data.frame.
-
-```{r}
-MC2_graph2 <- tbl_graph(nodes = MC2_node_filter,
-                       edges = MC2_edges_weight)
-
-MC2_graph2
-```
-
-```{r}
-#another way to turn edge and node into tibble dataframe
-
-graph <- igraph::graph_from_data_frame(MC2_edges_filter, vertices = MC2_node_select) %>% as_tbl_graph()
-graph
-```
-
-# Visualization
-
-```{r}
-g <- ggraph(graph,
-            layout = "nicely") +
-  geom_edge_link(aes(color = Year,
-                     width = Weight)) +
-  scale_edge_width(range = c(0.1, 5))+
-  geom_node_point(aes())
-
-g+ theme_graph()
-```
-
-```{r}
-g <- graph %>%
-  mutate(betweenness_centrality = centrality_betweenness()) %>%
-  ggraph(layout = "fr") + 
-  geom_edge_link(aes(width=Weight, color = Year)) +
-  scale_edge_width(range = c(0.1, 5)) +
-  geom_node_point(aes(
-            size=betweenness_centrality))
-g + theme_graph()
-```
-
-```{r}
-g <- graph %>%
-  mutate(community = as.factor(group_edge_betweenness(weights = Weight, directed = TRUE))) %>%
-  ggraph(layout = "fr") + 
-  geom_edge_link(aes(width=Weight), 
-                 alpha=0.2) +
-  scale_edge_width(range = c(0.1, 5)) +
-  geom_node_point(aes(colour = community))  
-
-g + theme_graph()
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
-```
