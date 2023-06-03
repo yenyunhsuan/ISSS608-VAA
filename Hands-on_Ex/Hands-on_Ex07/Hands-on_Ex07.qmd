@@ -1,3 +1,35 @@
 ---
 title: "Hands-on_Ex07"
 ---
+
+# Import package, data
+
+```{r}
+pacman::p_load(scales, viridis, lubridate, ggthemes, gridExtra, readxl, knitr, data.table, CGPfunctions, ggHoriPlot, tidyverse)
+```
+
+```{r}
+attacks <- read_csv("data/eventlog.csv")
+```
+
+kable() can be used to review the structure of the imported data frame
+
+```{r}
+kable(head(attacks))
+```
+
+# Data preparation
+
+Deriving weekday and hour of day fields
+
+```{r}
+make_hr_wkday <- function(ts, sc, tz) {
+  real_times <- ymd_hms(ts, 
+                        tz = tz[1], 
+                        quiet = TRUE)
+  dt <- data.table(source_country = sc,
+                   wkday = weekdays(real_times),
+                   hour = hour(real_times))
+  return(dt)
+  }
+```

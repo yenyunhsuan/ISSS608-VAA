@@ -52,7 +52,7 @@ Below extract data frame from MC2 list as tibble table.
 -   There are many NA values in shpcountry and rcvcountry columns, and it is hard to fill in those NA values, so exclude these two columns.
 
 | Col name   | Description                                                   |
-|------------|---------------------------------------------------------------|
+|------------------|------------------------------------------------------|
 | id         | Unique integers representing each company                     |
 | shpcountry | Country the company most often associated with when shipping  |
 | rcvcountry | Country the company most often associated with when receiving |
@@ -99,7 +99,7 @@ glimpse(MC2_edges)
 ```
 
 |                   |                                                                                                                       |
-|-------------------|-----------------------------------------------------------------------------------------------------------------------|
+|------------------|------------------------------------------------------|
 | **Col name**      | **Description**                                                                                                       |
 | arrival_date/Year | Date/Year the shipment arrived at port                                                                                |
 | hscode            | Harmonized System code (commodity code) for the shipment                                                              |
