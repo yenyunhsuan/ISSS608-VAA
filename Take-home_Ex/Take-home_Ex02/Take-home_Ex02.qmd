@@ -17,12 +17,8 @@ execute:
 This is [Mini-Challenge 2](https://vast-challenge.github.io/2023/MC2.html) of VAST Challenge 2023.
 
 The country of Oceanus has sought FishEye International's help in identifying companies possibly engaged in illegal, unreported, and unregulated (IUU) fishing.\
-<<<<<<< HEAD
+
 To facilitate their analysis, FishEye transformed the trade data into a knowledge graph. Using this knowledge graph, they hope to understand business relationships, including finding links that will help them stop IUU fishing and protect marine species that are affected by it. They are now looking for visualizations that provide more **detail about patterns for entities** in the knowledge graph.
-=======
-As part of the collaboration, FishEye's analysts received **import/export data** for Oceanus' marine and fishing industries. To facilitate their analysis, FishEye transformed the trade data into a knowledge graph. Using this knowledge graph, they hope to understand business relationships, including finding links that will help them stop IUU fishing and protect marine species that are affected by it.\
-FishEye analysts found that **node-link diagrams** gave them a good high-level overview of the knowledge graph. However, they are now looking for visualizations that provide more detail about patterns for entities in the knowledge graph.
->>>>>>> a8cf15a370c7cd3e626dd6cde0e3ed219de85c98
 
 # Task
 
@@ -35,9 +31,8 @@ FishEye knows from past experience that companies caught fishing illegally will 
 ```{r}
 pacman::p_load(igraph, jsonlite, ggraph,igraphdata, 
                visNetwork, lubridate, clock,
-               tidyverse, graphlayouts,jsonlite,gtsummary,
-               tinygraph,seriation, dendextend,heatmaply,dplyr,ggplot2,
-               gridExtra, tidygraph)
+               tidyverse, graphlayouts,gtsummary,
+               tinygraph,seriation, dendextend,heatmaply,dplyr,ggplot2, gridExtra, tidygraph)
 ```
 
 ## Import data
@@ -57,7 +52,7 @@ Below extract data frame from MC2 list as tibble table.
 -   There are many NA values in shpcountry and rcvcountry columns, and it is hard to fill in those NA values, so exclude these two columns.
 
 | Col name   | Description                                                   |
-|------------------|------------------------------------------------------|
+|------------|---------------------------------------------------------------|
 | id         | Unique integers representing each company                     |
 | shpcountry | Country the company most often associated with when shipping  |
 | rcvcountry | Country the company most often associated with when receiving |
@@ -85,15 +80,14 @@ colSums(is.na(MC2_edge))
 
 glimpse(MC2_edge)
 ```
-Use select to drop three "value-" columns with lots of NA, and drop "dataset" which is no need.
 
+Use select to drop three "value-" columns with lots of NA, and drop "dataset" which is no need.
 
 ::: callout-caution
 ## Notice
 
 The arrivaldate is treated as "Character" data type instead of date data type. Need to change the data type back to "Date"" data type.
 :::
-
 
 ```{r}
 MC2_edges <- MC2_edge%>%
@@ -105,10 +99,8 @@ MC2_edges <- MC2_edge%>%
 glimpse(MC2_edges)
 ```
 
-<<<<<<< HEAD
-|                   |                                                                                                                       |
-|------------------|------------------------------------------------------|
-| **Col name**      | **Description**                                                                                                       |
+| **Col name**      | Description                                                                                                           |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------|
 | arrival_date/Year | Date/Year the shipment arrived at port                                                                                |
 | hscode            | Harmonized System code (commodity code) for the shipment                                                              |
 | weightkg          | The weight of the shipment in kilograms                                                                               |
@@ -133,6 +125,7 @@ hscode <- MC2_edges %>%
 
 glimpse(arrange(hscode, desc(Weight)))
 ```
+
 ### Count in-degree and out-degree by unique edge
 
 ```{r}
@@ -191,6 +184,7 @@ decreasing = T),],n=5)
 
 head(top_out)
 ```
+
 # Temporal pattern
 
 ## Interrupted pattern
@@ -238,7 +232,9 @@ MC2_node_abnor <- MC2_edges_aggregated %>%
   summarise(Weight = sum(Weight), .groups = "drop")
 head(MC2_node_abnor)
 ```
+
 ### Plot heatmap
+
 ```{r}
 #|warning: false
 g1 <- ggplot(MC2_node_abnor, aes(Year,source)) +
@@ -493,4 +489,3 @@ ggplot(MC2_nor, aes(Year,source)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   theme(axis.text.y = element_text(size = 7))
 ```
-

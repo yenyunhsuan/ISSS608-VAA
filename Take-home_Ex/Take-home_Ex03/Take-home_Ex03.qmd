@@ -75,19 +75,19 @@ glimpse(MC3_edges)
 -   Replace "character\[0\] in product_services with blank
 
 ```{r}
-MC3_nodes <- as_tibble(MC3$nodes) %>% 
-  mutate(country = as.character(country),
-         id = as.character(id),
-         product_services = as.character(product_services),
-         revenue_omu = as.numeric(as.character(revenue_omu)),
-         type = as.character(type))%>% 
-  select(id, country, type, revenue_omu, product_services) %>% 
-  mutate(revenue_omu = replace(revenue_omu, is.na(revenue_omu), 0),
-         product_services = replace(product_services, product_services == "character(0)", ""))
-
-
- 
-glimpse(MC3_nodes)
+# MC3_nodes <- as_tibble(MC3$nodes) %>% 
+#   mutate(country = as.character(country),
+#          id = as.character(id),
+#          product_services = as.character(product_services),
+#          revenue_omu = as.numeric(as.character(revenue_omu)),
+#          type = as.character(type))%>% 
+#   select(id, country, type, revenue_omu, product_services) %>% 
+#   mutate(revenue_omu = replace(revenue_omu, is.na(revenue_omu), 0),
+#          product_services = replace(product_services, product_services == "character(0)", ""))
+# 
+# 
+#  
+# glimpse(MC3_nodes)
 ```
 
 # Explore distribution
@@ -99,11 +99,11 @@ glimpse(MC3_nodes)
 -   Remove away punctuations
 
 ```{r}
-tidy_nodes <- MC3_nodes %>% 
-  unnest_tokens(word,
-                product_services,
-                to_lower = TRUE,
-                strip_punct =TRUE)
+# tidy_nodes <- MC3_nodes %>% 
+#   unnest_tokens(word,
+#                 product_services,
+#                 to_lower = TRUE,
+#                 strip_punct =TRUE)
 ```
 
 ## Remove stopwords
@@ -111,12 +111,8 @@ tidy_nodes <- MC3_nodes %>%
 Use the stop_words package, and use anti_join to remove those stopwords in tidy_nodes
 
 ```{r}
-tidy_stopwords <- tidy_nodes %>% 
-  anti_join(stop_words)
+# tidy_stopwords <- tidy_nodes %>% 
+#   anti_join(stop_words)
 ```
 
 ## Look for top key words
-
-```{r}
-
-```
